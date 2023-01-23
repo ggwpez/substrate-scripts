@@ -1,3 +1,8 @@
+"""
+This script is used to upgrade accounts to the new balance storage scheme
+introduced in https://github.com/paritytech/substrate/pull/12951
+"""
+
 import json
 import os
 from substrateinterface import SubstrateInterface, Keypair
