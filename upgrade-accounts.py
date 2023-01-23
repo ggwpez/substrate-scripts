@@ -17,14 +17,12 @@ sender_uri = os.getenv('SENDER_URI', '//Alice')
 sender = Keypair.create_from_uri(sender_uri)
 print(f"Using sender account {sender.ss58_address}")
 
-"""
-[…] run though all accounts with reserved/locked funds on the system and call a
-particular transaction on them
-"""
-
 
 def main():
-    # "all accounts with reserved/locked funds"
+    """
+    […] run though all accounts with reserved/locked funds on the system and call a
+    particular transaction on them
+    """
     accounts = []
     account_query = chain.query_map('System', 'Account', page_size=1000)
 
@@ -77,10 +75,11 @@ def main():
             print(f"Failed to submit extrinsic: {e}")
             raise e
 
-# Lazily split 'list' into 'n'-sized chunks.
-
 
 def chunks(list, n):
+    """
+    Lazily split 'list' into 'n'-sized chunks.
+    """
     for i in range(0, len(list), n):
         yield list[i:i + n]
 
