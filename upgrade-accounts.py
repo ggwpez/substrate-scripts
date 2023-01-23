@@ -8,7 +8,7 @@ chain = SubstrateInterface(
     # Using the public endpoint can get you rate-limited.
     # url="wss://kusama-rpc.polkadot.io",
     # These Parity internals are not limited.
-	# url="wss://polkadot-try-runtime-node.parity-chains.parity.io:443"
+    # url="wss://polkadot-try-runtime-node.parity-chains.parity.io:443"
 )
 
 print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
@@ -21,6 +21,8 @@ print(f"Using sender account {sender.ss58_address}")
 […] run though all accounts with reserved/locked funds on the system and call a
 particular transaction on them
 """
+
+
 def main():
     # "all accounts with reserved/locked funds"
     accounts = []
@@ -76,9 +78,12 @@ def main():
             raise e
 
 # Lazily split 'list' into 'n'-sized chunks.
-def chunks(list, n):    
+
+
+def chunks(list, n):
     for i in range(0, len(list), n):
         yield list[i:i + n]
+
 
 if __name__ == "__main__":
     main()
