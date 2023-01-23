@@ -1,6 +1,11 @@
 """
 This script is used to upgrade accounts to the new balance storage scheme
 introduced in https://github.com/paritytech/substrate/pull/12951
+
+Install the dependency https://github.com/polkascan/py-substrate-interface like:
+ pip install substrate-interface
+Then run it:
+ python3 upgrade-accounts.py
 """
 
 import json
