@@ -12,6 +12,7 @@ from substrateinterface import SubstrateInterface
 URL = "ws://127.0.0.1:9944"
 #URL = "wss://rpc.polkadot.io"
 URL = "wss://kusama-rpc.polkadot.io"
+URL = "wss://rococo-rpc.polkadot.io"
 
 while True:
 	try:
@@ -22,7 +23,6 @@ while True:
 		print(f"Failed to connect to {URL}: {e}")
 		time.sleep(1)
 		pass
-
 
 print(f"Connected to {substrate.name}: {substrate.chain} v{substrate.version}")
 storage_functions = substrate.get_metadata_storage_functions()
