@@ -3,7 +3,7 @@ import json
 import pytest
 import prefund_chain_spec
 
-@pytest.mark.parametrize("chain", ["dev"])
+@pytest.mark.parametrize("chain", ["dev", "polkadot-dev", "kusama-dev", "westend-dev", "rococo-dev"])
 def test_prefund_works(chain):
     input = f'{chain}.json'
     output = f'{chain}-out.json'
