@@ -6,13 +6,19 @@ from config import parse_args
 base_compile = "%s build --bin %s --profile=%s --locked --features=runtime-benchmarks"
 bench = "./target/%s/%s benchmark pallet --chain=%s --steps=%s --repeat=%s --pallet='%s' --extrinsic='%s' --execution=wasm --wasm-execution=compiled --heap-pages=4096 --output=%s"# --template=%s --header=%s"
 
+project_to_bin = {
+	"substrate": "substrate",
+	"polkadot": "polkadot",
+	"cumulus": "polkadot-parachain",
+}
+
 def build_compile_cmd(args):
 	if args.cargo_remote:
 		# Copy back the build artefact.
 		remote = "cargo remote -H home -c %s/%s --" % (args.profile, args.project)
-		return base_compile % (remote, args.project, args.profile)
+		return base_compile % (remote, project_to_bin[args.project], args.profile)
 	else:
-		return base_compile % ("cargo", args.project, args.profile)
+		return base_compile % ("cargo", project_to_bin[args.project], args.profile)
 
 def build_bench_cmd(args, pallet, case, out_dir):
 	if args.project == "substrate":
@@ -33,7 +39,7 @@ def main(args):
 		log("Compiling ...")
 		compile(args)		
 	
-	# List all available benchmarks.	
+	# List all available benchmarks.
 	log("Listing ...")
 	per_pallet = list_benches(args)
 	pallets = per_pallet.keys()
