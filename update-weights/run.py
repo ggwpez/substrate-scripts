@@ -38,6 +38,7 @@ def main(args):
 	per_pallet = list_benches(args)
 	pallets = per_pallet.keys()
 	
+	any_not_skipped = False
 	# Run all benchmarks.
 	for i, pallet in enumerate(pallets):
 		msg = "[%d/%d] %s: %d cases" % (i+1, len(pallets), pallet, len(per_pallet[pallet]))
@@ -46,6 +47,10 @@ def main(args):
 			continue
 		log(msg + " ...")
 		run_pallet(pallet, args)
+		any_not_skipped = True
+
+	if not any_not_skipped:
+		raise Exception("All pallets skipped - error")
 	
 	log("🎉 Weights in '%s', json output in '%s'" % (args.weight_dir, args.json_dir))
 	log("You can enact the new weights with\ncp -RT %s/frame %s/frame" % (args.weight_dir, args.cwd))
