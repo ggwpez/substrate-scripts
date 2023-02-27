@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # Migration script for https://github.com/paritytech/substrate/pull/13475
 # Apply to the root directory of your repo like:
 #
