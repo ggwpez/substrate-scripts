@@ -8,6 +8,7 @@ import matplotlib.dates
 
 from datetime import datetime
 
+# exported data from metabase
 path = "relay_chain__block_time_over_7_seconds_2023-03-10T17_40_01.193809Z.json"
 datas = json.load(open(path))
 
@@ -20,7 +21,6 @@ for data in datas:
 		timestamp = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
 	except ValueError:
 		timestamp = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
-	#timestamp = matplotlib.dates.date2num(timestamp)
 	date.append(timestamp)
 	diff.append(data["time_diff_seconds"])
 
