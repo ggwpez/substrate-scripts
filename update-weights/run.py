@@ -23,10 +23,10 @@ def build_compile_cmd(args):
 def build_bench_cmd(args, pallet, case, out_dir):
 	if args.project == "substrate":
 		#weight_path = "%s/frame/%s/src/weights.rs" % (args.weight_dir, pallet)
-		weight_path = out_dir
+		weight_path = out_dir + "weights.rs"
 	else:
 		# TODO
-		weight_path = "/tmp/weight.rs"
+		weight_path = out_dir
 	# TODO Json
 	return bench % (args.profile, args.project, args.runtime, args.steps, args.repeat, pallet, case, weight_path)
 	#, args.template, args.header)
