@@ -17,14 +17,14 @@ COMMIT_DOT=$(git rev-parse HEAD)
 echo "Moving Polkadot to subfolder.."
 git filter-repo --to-subdirectory-filter polkadot --quiet
 echo "Filtering Polkadot files..."
-python /home/vados/work/substrate-scripts/filter-folder.py polkadot/runtime --quiet
+python3 filter-folder.py polkadot/runtime --quiet
 
 cd ../cumulus2/
 COMMIT_CUM=$(git rev-parse HEAD)
 echo "Moving Cumulus to subfolder.."
 git filter-repo --to-subdirectory-filter cumulus --quiet
 echo "Filtering Cumulus files..."
-python /home/vados/work/substrate-scripts/filter-folder.py cumulus/parachains
+python3 filter-folder.py cumulus/parachains
 
 cd ../runtimes
 git checkout main
@@ -79,11 +79,17 @@ git add --all
 git commit -m "Move Cumulus to root folder" --no-gpg-sign
 
 echo "Importing meta files..."
-git cherry-pick d55e8232b948865a1d64eb9a7ce4960ac590dff9 --no-gpg-sign
+git cherry-pick 81488550bc0e1329eb2fe64b5ae4065693229107 --no-gpg-sign
 echo "Creating workspace..."
-git cherry-pick c88df07fc34c7fce243fdca63f083b97cddce715 --no-gpg-sign
+git cherry-pick bd9089eb24c050aae74221d8c980879ecaed8991 --no-gpg-sign
 
 echo "Moved Polkadot from commit $COMMIT_DOT"
 echo "Moved Cumulus from commit $COMMIT_CUM"
-echo "All done; running cargo check..."
+
+echo "Checking dependency resolves..."
+python check-deps.py
+echo "Checking build..."
 SKIP_WASM_BUILD=1 cargo check --all-features -q
+
+tree -I 'target' -d || echo "Tree command not found - skipping"
+echo "All done"
