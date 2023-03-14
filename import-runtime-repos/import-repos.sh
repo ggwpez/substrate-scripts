@@ -30,7 +30,7 @@ git filter-repo --to-subdirectory-filter cumulus --quiet --force
 echo "Filtering Cumulus files..."
 python3 $SCRIPT_DIR/filter-folder.py cumulus/parachains
 
-cd ../runtimes
+cd $CWD/runtimes
 rm -rf target
 git checkout main
 git branch -D tmp-init tmp-filter-cumulus tmp-filter-polkadot || true
@@ -49,7 +49,7 @@ git pull ../cumulus2.filtered/ master -q
 
 echo "Merging Polkadot and Cumulus..."
 git checkout tmp-init
-git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" --no-gpg-sign -q
+git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" -q
 mkdir -p relay/runtimes
 
 git mv polkadot/runtime/common/ relay/common
@@ -61,9 +61,9 @@ git mv polkadot/runtime/test-runtime/ relay/runtimes/test-runtime
 
 git rm -rf polkadot
 git add --all
-git commit -m "Move Polkadot to root folder" --no-gpg-sign
+git commit -m "Move Polkadot to root folder"
 
-git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" --no-gpg-sign -q
+git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q
 mkdir -p system-parachains/runtimes/asset-hubs
 mkdir -p system-parachains/runtimes/bridge-hubs
 mkdir -p system-parachains/runtimes/collectives
@@ -82,12 +82,26 @@ git mv cumulus/parachains/common/ system-parachains/common
 
 rm -rf cumulus
 git add --all
-git commit -m "Move Cumulus to root folder" --no-gpg-sign
+git commit -m "Move Cumulus to root folder"
 
 echo "Importing meta files..."
-git cherry-pick d55e8232b948865a1d64eb9a7ce4960ac590dff9 --no-gpg-sign
+git cherry-pick cfcaae413ed0678907b151e356add968fc9a4a3c
 echo "Creating workspace..."
-git cherry-pick 37e7db30a8105adbdba6970713ef4103224587c7 --no-gpg-sign
+git cherry-pick 6611c8fb8b6f993bd15392cc99d6857c17231694
+
+echo "Sanity checking history..."
+# There should be 128 commits
+COMMITS=$(git log --no-merges -M --oneline --follow -- system-parachains/runtimes/asset-hubs/assets-hub-kusama/src/lib.rs | wc -l)
+if [ "$COMMITS" -ne "128" ]; then
+	echo "Expected 128 commits, got $COMMITS"
+	exit 1
+fi
+# And 648 for polkadot
+COMMITS=$(git log --no-merges --oneline -M --follow -- relay/runtimes/polkadot/src/lib.rs | wc -l)
+if [ "$COMMITS" -ne "648" ]; then
+	echo "Expected 648 commits, got $COMMITS"
+	exit 1
+fi
 
 echo "Checking dependency resolves..."
 python $SCRIPT_DIR/check-deps.py $CWD/runtimes

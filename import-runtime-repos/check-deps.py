@@ -9,6 +9,7 @@ print("🔎 Checking folder %s" % DIR)
 
 crates = []
 manifests = []
+in_workspace = []
 
 for root, dirs, files in os.walk(DIR):
 	if "target" in root:
@@ -20,8 +21,14 @@ for root, dirs, files in os.walk(DIR):
 				content = f.read()
 				manifest = toml.loads(content)
 				if 'workspace' in manifest:
+					for member in manifest['workspace']['members']:
+						in_workspace.append(member)
 					continue
 				manifests.append(manifest)
+
+if len(in_workspace) != len(manifests):
+	print("💥 Crates are missing from the workspace Cargo.toml")
+	sys.exit(1)
 
 for manifest in manifests:
 	name = manifest['package']['name']
@@ -64,7 +71,6 @@ for link in links:
 	print("✅ %s -> %s" % link)
 for link in broken:
 	print("❌ %s -> %s" % link)
-
 
 if len(broken) > 0:
 	print("💥 %d out of %d links are broken" % (len(broken), len(links)))
