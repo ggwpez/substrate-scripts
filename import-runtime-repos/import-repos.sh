@@ -11,10 +11,10 @@ cd $CWD
 
 echo "Cloning Polkadot..."
 git clone https://github.com/paritytech/polkadot polkadot2 --branch master --quiet
-cd polkadot2 && git reset --hard c02f9adb6e31357a21fb0d07005441db71ddc9d6 && cd ..
+cd polkadot2 && git reset --hard 70598a19e57a84db9be16ad189f505be19f70db8 && cd ..
 echo "Cloning Cumulus..."
 git clone https://github.com/paritytech/cumulus cumulus2 --branch master --quiet
-cd cumulus2 && git reset --hard 836f13e24c74fcc0fe70eeeffd88214c88bf2316 && cd ..
+cd cumulus2 && git reset --hard 2c3cd02703c312c8b762caa19efb3966d56df4d5 && cd ..
 
 cd polkadot2/
 COMMIT_DOT=$(git rev-parse HEAD)
@@ -28,7 +28,7 @@ COMMIT_CUM=$(git rev-parse HEAD)
 echo "Moving Cumulus to subfolder.."
 git filter-repo --to-subdirectory-filter cumulus --quiet --force
 echo "Filtering Cumulus files..."
-python3 $SCRIPT_DIR/filter-folder.py cumulus/parachains
+python3 $SCRIPT_DIR/filter-folder.py cumulus/parachains cumulus/pallets/collator-selection
 
 cd $CWD/runtimes
 rm -rf target
@@ -49,7 +49,7 @@ git pull ../cumulus2.filtered/ master -q
 
 echo "Merging Polkadot and Cumulus..."
 git checkout tmp-init
-git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" -q
+git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" -q --no-gpg-sign --signoff
 mkdir -p relay/runtimes
 
 git mv polkadot/runtime/common/ relay/common
@@ -61,9 +61,9 @@ git mv polkadot/runtime/test-runtime/ relay/runtimes/test-runtime
 
 git rm -rf polkadot
 git add --all
-git commit -m "Move Polkadot to root folder"
+git commit -m "Move Polkadot to root folder" --no-gpg-sign --signoff
 
-git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q
+git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q --no-gpg-sign --signoff
 mkdir -p system-parachains/runtimes/asset-hubs
 mkdir -p system-parachains/runtimes/bridge-hubs
 mkdir -p system-parachains/runtimes/collectives
@@ -79,20 +79,22 @@ git mv cumulus/parachains/runtimes/collectives/collectives-polkadot system-parac
 
 git mv cumulus/parachains/integration-tests/ system-parachains/integration-tests
 git mv cumulus/parachains/common/ system-parachains/common
+mkdir -p system-parachains/common/pallets/
+git mv cumulus/pallets/collator-selection/ system-parachains/common/pallets/collator-selection
 
 rm -rf cumulus
 git add --all
-git commit -m "Move Cumulus to root folder"
+git commit -m "Move Cumulus to root folder" --no-gpg-sign --signoff
 
 echo "Importing meta files..."
-git cherry-pick cfcaae413ed0678907b151e356add968fc9a4a3c
+git cherry-pick cfcaae413ed0678907b151e356add968fc9a4a3c --no-gpg-sign --signoff
 echo "Creating workspace..."
-git cherry-pick 6611c8fb8b6f993bd15392cc99d6857c17231694
+git cherry-pick b2fa3dac876e2b9854b06522006dfd5ba5f0f8da --no-gpg-sign --signoff
 
 echo "Sanity checking history..."
 # There should be 128 commits
 COMMITS=$(git log --no-merges -M --oneline --follow -- system-parachains/runtimes/asset-hubs/assets-hub-kusama/src/lib.rs | wc -l)
-if [ "$COMMITS" -ne "128" ]; then
+if [ "$COMMITS" -ne "129" ]; then
 	echo "Expected 128 commits, got $COMMITS"
 	exit 1
 fi
