@@ -49,7 +49,7 @@ git pull ../cumulus2.filtered/ master -q
 
 echo "Merging Polkadot and Cumulus..."
 git checkout tmp-init
-git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" -q --no-gpg-sign --signoff
+git merge --allow-unrelated-histories tmp-filter-polkadot -m "Import Polkadot" -q --signoff
 mkdir -p relay/runtimes
 
 git mv polkadot/runtime/common/ relay/common
@@ -61,39 +61,39 @@ git mv polkadot/runtime/test-runtime/ relay/runtimes/test-runtime
 
 git rm -rf polkadot
 git add --all
-git commit -m "Move Polkadot to root folder" --no-gpg-sign --signoff
+git commit -m "Move Polkadot to root folder" --signoff
 
-git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q --no-gpg-sign --signoff
+git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q --signoff
 mkdir -p system-parachains/runtimes/asset-hubs
 mkdir -p system-parachains/runtimes/bridge-hubs
 mkdir -p system-parachains/runtimes/collectives
 
 git mv cumulus/parachains/runtimes/assets/common system-parachains/runtimes/asset-hubs/common
-git mv cumulus/parachains/runtimes/assets/statemint system-parachains/runtimes/asset-hubs/assets-hub-polkadot
-git mv cumulus/parachains/runtimes/assets/statemine system-parachains/runtimes/asset-hubs/assets-hub-kusama
+git mv cumulus/parachains/runtimes/assets/test-utils system-parachains/runtimes/asset-hubs/common/test-utils
+git mv cumulus/parachains/runtimes/assets/statemint system-parachains/runtimes/asset-hubs/asset-hub-polkadot
+git mv cumulus/parachains/runtimes/assets/statemine system-parachains/runtimes/asset-hubs/asset-hub-kusama
 
 git mv cumulus/parachains/runtimes/bridge-hubs/bridge-hub-kusama system-parachains/runtimes/bridge-hubs/bridge-hub-kusama
 git mv cumulus/parachains/runtimes/bridge-hubs/bridge-hub-polkadot system-parachains/runtimes/bridge-hubs/bridge-hub-polkadot
 
 git mv cumulus/parachains/runtimes/collectives/collectives-polkadot system-parachains/runtimes/collectives/collectives-polkadot
 
-git mv cumulus/parachains/integration-tests/ system-parachains/integration-tests
 git mv cumulus/parachains/common/ system-parachains/common
 mkdir -p system-parachains/common/pallets/
 git mv cumulus/pallets/collator-selection/ system-parachains/common/pallets/collator-selection
 
 rm -rf cumulus
 git add --all
-git commit -m "Move Cumulus to root folder" --no-gpg-sign --signoff
+git commit -m "Move Cumulus to root folder" --signoff
 
 echo "Importing meta files..."
-git cherry-pick cfcaae413ed0678907b151e356add968fc9a4a3c --no-gpg-sign --signoff
+git cherry-pick 5769aa7dad57a742a66f2156bef558b110f961a2 --signoff
 echo "Creating workspace..."
-git cherry-pick b2fa3dac876e2b9854b06522006dfd5ba5f0f8da --no-gpg-sign --signoff
+git cherry-pick 01a30b3d8 --signoff
 
 echo "Sanity checking history..."
 # There should be 128 commits
-COMMITS=$(git log --no-merges -M --oneline --follow -- system-parachains/runtimes/asset-hubs/assets-hub-kusama/src/lib.rs | wc -l)
+COMMITS=$(git log --no-merges -M --oneline --follow -- system-parachains/runtimes/asset-hubs/asset-hub-kusama/src/lib.rs | wc -l)
 if [ "$COMMITS" -ne "129" ]; then
 	echo "Expected 128 commits, got $COMMITS"
 	exit 1
