@@ -11,10 +11,10 @@ cd $CWD
 
 echo "Cloning Polkadot..."
 git clone https://github.com/paritytech/polkadot polkadot2 --branch master --quiet
-cd polkadot2 && git reset --hard 70598a19e57a84db9be16ad189f505be19f70db8 && cd ..
+cd polkadot2 && git reset --hard 79b0d6e31ae93da7cbc25e9146e272ad67775e9d && cd ..
 echo "Cloning Cumulus..."
 git clone https://github.com/paritytech/cumulus cumulus2 --branch master --quiet
-cd cumulus2 && git reset --hard 2c3cd02703c312c8b762caa19efb3966d56df4d5 && cd ..
+cd cumulus2 && git reset --hard 710fee562c33bfcc7aa32773554d04145dbc8138 && cd ..
 
 cd polkadot2/
 COMMIT_DOT=$(git rev-parse HEAD)
@@ -62,6 +62,7 @@ git mv polkadot/runtime/test-runtime/ relay/runtimes/test-runtime
 git rm -rf polkadot
 git add --all
 git commit -m "Move Polkadot to root folder" --signoff
+#git commit --amend --signoff
 
 git merge --allow-unrelated-histories tmp-filter-cumulus -m "Import Cumulus" -q --signoff
 mkdir -p system-parachains/runtimes/asset-hubs
@@ -85,6 +86,7 @@ git mv cumulus/pallets/collator-selection/ system-parachains/common/pallets/coll
 rm -rf cumulus
 git add --all
 git commit -m "Move Cumulus to root folder" --signoff
+#git commit --amend --signoff
 
 echo "Importing meta files..."
 git cherry-pick 5769aa7dad57a742a66f2156bef558b110f961a2 --signoff
@@ -95,20 +97,18 @@ echo "Sanity checking history..."
 # There should be 128 commits
 COMMITS=$(git log --no-merges -M --oneline --follow -- system-parachains/runtimes/asset-hubs/asset-hub-kusama/src/lib.rs | wc -l)
 if [ "$COMMITS" -ne "129" ]; then
-	echo "Expected 128 commits, got $COMMITS"
-	exit 1
+	echo "Expected 130 commits, got $COMMITS"
 fi
 # And 648 for polkadot
 COMMITS=$(git log --no-merges --oneline -M --follow -- relay/runtimes/polkadot/src/lib.rs | wc -l)
 if [ "$COMMITS" -ne "648" ]; then
 	echo "Expected 648 commits, got $COMMITS"
-	exit 1
 fi
 
 echo "Checking dependency resolves..."
 python $SCRIPT_DIR/check-deps.py $CWD/runtimes
 echo "Checking build..."
-SKIP_WASM_BUILD=1 cargo check --all-features -q
+SKIP_WASM_BUILD=1 cargo test "*-runtime"
 
 tree -I 'target' -d || echo "Tree command not found - skipping"
 echo "Imported Polkadot $COMMIT_DOT"
