@@ -1,5 +1,9 @@
 // SPDX-FileCopyrightText: 2022 Parity Technologies (UK) Ltd.
 // SPDX-License-Identifier: Apache-2.0
+//
+// Add a `call_index` attribute to all pallets in the passed folder.
+// Used in https://github.com/paritytech/substrate/pull/12891 with argument
+// `substrate/frame`. Commit your git before using.
 
 use walkdir::WalkDir; // "2.3.2"
 use regex::Regex; // "1.7.0"
