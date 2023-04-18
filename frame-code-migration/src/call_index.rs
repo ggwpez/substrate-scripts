@@ -10,7 +10,7 @@ use regex::Regex; // "1.7.0"
 
 // Call with `substrate/frame` as the only argument.
 fn main() {
-    let folder = std::env::args().nth(1).unwrap();
+    let folder = std::env::args().nth(1).expect("Need a folder as first argument");
     let re = Regex::new(r"^(\s+)#\[pallet::weight\(").expect("Regex is known good");
     let mut modified_files = 0;
     let mut modified_calls = 0;

@@ -1,0 +1,16 @@
+[package]
+name = "migrate-call-index"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "migrate-call-index"
+path = "src/call_index.rs"
+
+[[bin]]
+name = "migrate-call-weight"
+path = "src/call_weight.rs"
+
+[dependencies]
+regex = "1.7.3"
+walkdir = "2.3.3"
