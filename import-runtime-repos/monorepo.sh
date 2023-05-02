@@ -5,7 +5,7 @@
 
 # Deps:
 #  python3 -m pip install --user git-filter-repo
-#  cargo add diener
+#  cargo install diener
 # Run:
 #  Create some work dir: mkdir ../../tmp
 #  ./monorepo.sh ../../tmp
