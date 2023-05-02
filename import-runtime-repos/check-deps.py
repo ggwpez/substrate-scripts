@@ -1,4 +1,4 @@
-# Ensures that workspace dependencies are resolved via `path` and not `git` or something else.
+# Ensures that workspace dependencies are resolved via `path` and not something else.
 
 import os
 import sys
@@ -52,8 +52,8 @@ for manifest in manifests:
 				if not 'path' in deps[dep]:
 					broken.append((name, dep_name))
 	
-	check_deps(manifest['dependencies'])
-
+	if 'dependencies' in manifest:
+		check_deps(manifest['dependencies'])
 	if 'dev-dependencies' in manifest:
 		check_deps(manifest['dev-dependencies'])
 	if 'build-dependencies' in manifest:
