@@ -39,14 +39,16 @@ def get_git_root(path: str = None) -> str:
         cwd=path, stderr=subprocess.DEVNULL).strip()
 
 
-def get_path_history(path: List[str]) -> List[str]:
+def get_path_history(path: str) -> List[str]:
     """Expand a path into all the names it's taken over the git history
 
     (This should also handle normalizing them to what filter-repo expects)
 
     Raises subprocess.CalledProcessError if outside a repository.
     """
-    log.debug("Retrieving history for: %s", path)
+    print("indexing history of", path)
+    if isinstance(path, list):
+        raise TypeError("path must be a string")
 
     lines = set(subprocess.check_output(['git', 'log',  # nosec
         '--pretty=format:', '--name-only', '--follow', '--', path
@@ -81,7 +83,7 @@ def recurse_arg(arg_path: str) -> List[str]:
 
     results = []
     if os.path.isfile(arg_path):
-        results.append(get_path_history(arg_path))
+        results.append(arg_path)
     else:
         for path, dirs, files in os.walk(arg_path):
             for dname in dirs[:]:
