@@ -24,12 +24,12 @@ SIGN_ARGS="--signoff --no-gpg-sign"
 # sha of cumulus/Cargo.lock file
 # very old 72205798f9a102fbb00c6662983dd6f96acdd670
 # old "9260459eb326c8bd747a8f738b03ab34f2902704"
-CUMULUS_SHA="72205798f9a102fbb00c6662983dd6f96acdd670"
-#$(curl -s "https://api.github.com/repos/paritytech/cumulus/commits?path=Cargo.lock&per_page=1" | jq -r '.[0].sha')
+CUMULUS_SHA=$(curl -s "https://api.github.com/repos/paritytech/cumulus/commits?path=Cargo.lock&per_page=1" | jq -r '.[0].sha')
 
 cd $CWD
 
 echo "Removing old dirs..."
+# NOTE we append `2` here in case some dingus runs it in his 'work' dir.
 [ -d "cumulus2" ] && rm -rf cumulus2/
 [ -d "polkadot2" ] && rm -rf polkadot2/
 [ -d "substrate2" ] && rm -rf substrate2/
@@ -139,18 +139,18 @@ git add --all
 git commit -m "FIXME Hotfix crates" $SIGN_ARGS
 
 rm -rf substrate/Cargo.toml polkadot/Cargo.toml cumulus/Cargo.toml */Cargo.lock
-diener workspacify
+#diener workspacify
 git add --all
-git commit -m "Setup workspace with diener" $SIGN_ARGS
+git commit -m "Clear workspace" $SIGN_ARGS
 
-echo '
-[workspace.package]
-authors = ["Parity Technologies <admin@parity.io>"]
-edition = "2021"
-repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"' >> Cargo.toml
-
-git add -u && git commit -m "Fix Workspace" $SIGN_ARGS
+#echo '
+#[workspace.package]
+#authors = ["Parity Technologies <admin@parity.io>"]
+#edition = "2021"
+#repository = "https://github.com/paritytech/polkadot.git"
+#version = "0.9.41"' >> Cargo.toml
+#
+#git add --all && git commit -m "Fix Workspace" $SIGN_ARGS
 
 echo "Running sanity checks..."
 COMMITS=$(git log --no-merges -M --oneline --follow -- substrate/README.md | wc -l)
