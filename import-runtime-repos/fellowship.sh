@@ -3,16 +3,26 @@
 # Script to import the runtimes into the fellowship runtimes repo.
 # Run this on the monorepo output of the `monorepo.sh` script.
 
-set -e
+set -eox pipefail
 
 # First arg is the CWD.
 CWD=$1
 # wtf...
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SIGN_ARGS="--signoff --no-gpg-sign"
 
 cd $CWD
 echo "Working in $CWD"
 
+# Either unzip the polkadot.zip file or error.
+if [ -f "polkadot-sdk.zip" ]; then
+	unzip -q polkadot-sdk.zip
+else
+	echo "polkadot-sdk.zip not found. Run monorepo.sh first."
+	exit 1
+fi
+
+cd polkadot-sdk
 SIGN_ARGS="--signoff --no-gpg-sign"
 
 # Re-write history again to move all folders to the correct place.
@@ -53,6 +63,30 @@ python3 $SCRIPT_DIR/filter-folder.py \
 	relay/runtimes/parachains \
 	relay/runtimes/polkadot
 
-# Hacky sed to fix all the dependencies that were internal, but are not anymore.
-find . -type f -not -path target -not -path .git -exec sed -i 's|primitives = { package = "polkadot-primitives", path = ".*", default-features = false }|primitives = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "master" }|g' {} \;
-find . -type f -not -path target -not -path .git -exec sed -i 's|primitives = { package = "polkadot-primitives", path = ".*", default-features = false }|primitives = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "master" }|g' {} \;
+cd ../polkadot-sdk.filtered
+
+# Remove old Polkadot, Substrate and Cumulus repos.
+rm -rf polkadot substrate cumulus
+git add --all && git commit -m "Remove trash" $SIGN_ARGS
+
+echo "Fix all the dependencies that were internal, but are not anymore."
+cargo r --manifest-path $SCRIPT_DIR/fix-deps/Cargo.toml -- .
+echo "Diener workspacify"
+diener workspacify
+
+git add --all && git commit -m "Diener workspacify" $SIGN_ARGS
+
+echo '
+[workspace.package]
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+repository = "https://github.com/paritytech/polkadot.git"
+version = "1.0.0"' >> Cargo.toml
+
+git add --all && git commit -m "Add package metadata to workspace" $SIGN_ARGS
+
+echo "Checking dependency resolves..."
+python3 $SCRIPT_DIR/check-deps.py $PWD
+
+echo "Running cargo check... (You can CTRL+C now)"
+SKIP_WASM_BUILD=1 cargo test "*-runtime" -q # Build all but only execute 'runtime' tests.

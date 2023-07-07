@@ -49,7 +49,13 @@ fn main() {
         }
         
         let manifest = std::fs::read_to_string(&path).expect("failed to read manifest");
-        let mut doc = manifest.parse::<Document>().expect("failed to parse manifest");
+        let mut doc = match manifest.parse::<Document>() {
+            Ok(doc) => doc,
+            Err(e) => {
+                println!("Failed to parse manifest {}", path.display());
+                continue;
+            }
+        };
         // check if this is a rust crate
         if doc.as_table().get("package").is_none() {
             continue;
@@ -82,7 +88,6 @@ fn main() {
                 if let Some((dep_manifest, dep_path)) = crates.get(dep_name) {
                     // Calculate the relative path from the manifest to the dep
                     let rel_path = pathdiff::diff_paths(&dep_path, &crate_path).expect("failed to calculate relative path");
-                    println!("  dependency '{dep_name}' must have path '{rel_path}' and has '{import_path}'", dep_name = dep_name, rel_path = rel_path.display(), import_path = import_path);
                     if rel_path.to_str().unwrap() != import_path.as_str().unwrap() {
                         corrected = true;
                         let mut d = &mut crate_manifest[kind][orig_dep_name];

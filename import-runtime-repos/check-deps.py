@@ -10,6 +10,7 @@ print("🔎 Checking folder %s" % DIR)
 crates = []
 manifests = []
 in_workspace = []
+manifest_paths = []
 
 for root, dirs, files in os.walk(DIR):
 	if "target" in root:
@@ -21,13 +22,26 @@ for root, dirs, files in os.walk(DIR):
 				content = f.read()
 				manifest = toml.loads(content)
 				if 'workspace' in manifest:
+					print("📜 Found workspace manifest")
 					for member in manifest['workspace']['members']:
 						in_workspace.append(member)
 					continue
 				manifests.append(manifest)
+				# Cut off the root path and the trailing /Cargo.toml.
+				path = path[len(DIR)+1:-11]
+				manifest_paths.append(path)
+				print("📜 Found manifest %s" % path)
 
-if len(in_workspace) != len(manifests):
-	print("💥 Crates are missing from the workspace Cargo.toml")
+if len(in_workspace) != len(manifest_paths):
+	print("💥 Workspace members don't match manifest paths: %d vs %d" % (len(in_workspace), len(manifest_paths)))
+	missing = []
+	# Find out which ones are missing.
+	for i, path in enumerate(manifest_paths):
+		if not path in in_workspace:
+			missing.append([path, manifests[i]])
+	missing.sort()
+	for path, manifest in missing:
+		print("❌ %s in %s" % (manifest['package']['name'], path))
 	sys.exit(1)
 
 for manifest in manifests:

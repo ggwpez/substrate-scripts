@@ -10,8 +10,7 @@
 #  Create some work dir: mkdir ../../tmp
 #  ./monorepo.sh ../../tmp
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 # First arg is the CWD.
 CWD=$1
@@ -22,8 +21,8 @@ SIGN_ARGS="--signoff --no-gpg-sign"
 #SIGN_ARGS=""
 
 # sha of cumulus/Cargo.lock file
-# very old 72205798f9a102fbb00c6662983dd6f96acdd670
-# old "9260459eb326c8bd747a8f738b03ab34f2902704"
+#CUMULUS_SHA="7ab9d4f5baa87f8fee5a6e820a2ee8e4f0bdba44" # very old
+#CUMULUS_SHA="21919c89ad99fc4e2e6f12dd6679eb2d41892ac3" # old
 CUMULUS_SHA=$(curl -s "https://api.github.com/repos/paritytech/cumulus/commits?path=Cargo.lock&per_page=1" | jq -r '.[0].sha')
 
 cd $CWD
@@ -34,12 +33,12 @@ echo "Removing old dirs..."
 [ -d "polkadot2" ] && rm -rf polkadot2/
 [ -d "substrate2" ] && rm -rf substrate2/
 
-echo "Cloning Cumulus..."
+echo "Cloning Cumulus at ${CUMULUS_SHA}..."
 # Either unzip the cumulus.zip file or clone the repo.
 if [ -f "cumulus2.zip" ]; then
 	unzip -q cumulus2.zip
 else
-	git clone https://github.com/paritytech/cumulus cumulus2 --branch oty-update-deps --quiet
+	git clone https://github.com/paritytech/cumulus cumulus2 --quiet
 	zip -r cumulus2.zip cumulus2
 fi
 cd cumulus2 && git reset --hard $CUMULUS_SHA
@@ -48,7 +47,7 @@ SUBSTRATE_SHA=$(cat Cargo.lock| grep 'substrate?' | uniq | sed 's/source = "git+
 POLKADOT_SHA=$(cat Cargo.lock| grep 'polkadot?' | uniq | sed 's/source = "git+https:\/\/github.com\/paritytech\/polkadot?branch=master#//' | sed 's/"//')
 cd ..
 
-echo "Cloning Polkadot..."
+echo "Cloning Polkadot at ${POLKADOT_SHA}..."
 # Either unzip the polkadot.zip file or clone the repo.
 if [ -f "polkadot2.zip" ]; then
 	unzip -q polkadot2.zip
@@ -58,7 +57,7 @@ else
 fi
 cd polkadot2 && git reset --hard $POLKADOT_SHA && cd ..
 
-echo "Cloning Substrate..."
+echo "Cloning Substrate at ${SUBSTRATE_SHA}..."
 # Either unzip the substrate.zip file or clone the repo.
 if [ -f "substrate2.zip" ]; then
 	unzip -q substrate2.zip
@@ -85,8 +84,8 @@ git filter-repo --to-subdirectory-filter substrate --quiet --force
 # You can comment out the commands above if you have a copy already.
 cd ..
 
-mkdir -p monorepo
-cd monorepo
+mkdir -p polkadot-sdk
+cd polkadot-sdk
 git init -b master .
 #git clone git@github.com:paritytech-stg/polkadot-sdk.git polkadot-sdk-new
 #cd polkadot-sdk-new
@@ -166,9 +165,9 @@ if [ "$COMMITS" -ne "42" ]; then
 	echo "Wrong number of commits, got $COMMITS"
 fi
 
-echo "Checking dependency resolves..."
-python3 $SCRIPT_DIR/check-deps.py $PWD
-# echo "Checking build..."
-# SKIP_WASM_BUILD=1 cargo test "*-runtime" # Build all but only execute 'runtime' tests.
+cd ..
+rm -rf polkadot-sdk.zip
+zip -r polkadot-sdk.zip polkadot-sdk -q
+rm -rf polkadot-sdk
 
-echo "All done"
+echo "All done. Output in polkadot-sdk.zip"
