@@ -30,7 +30,6 @@ for root, dirs, files in os.walk(DIR):
 				# Cut off the root path and the trailing /Cargo.toml.
 				path = path[len(DIR)+1:-11]
 				manifest_paths.append(path)
-				print("📜 Found manifest %s" % path)
 
 if len(in_workspace) != len(manifest_paths):
 	print("💥 Workspace members don't match manifest paths: %d vs %d" % (len(in_workspace), len(manifest_paths)))
