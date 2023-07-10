@@ -37,41 +37,45 @@ SIGN_ARGS="--signoff --no-gpg-sign"
 
 # Re-write history again to move all folders to the correct place.
 git filter-repo --force \
-	--path-rename 'cumulus/pallets/collator-selection:system-parachains/common/pallets/collator-selection' \
-	--path-rename 'cumulus/parachains/common:system-parachains/common' \
+	--path-rename 'cumulus/Cargo.lock:Cargo.lock' \
 	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-kusama:system-parachains/runtimes/asset-hubs/asset-hub-kusama' \
 	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-polkadot:system-parachains/runtimes/asset-hubs/asset-hub-polkadot' \
-	--path-rename 'cumulus/parachains/runtimes/assets/common:system-parachains/runtimes/asset-hubs/common' \
-	--path-rename 'cumulus/parachains/runtimes/assets/test-utils:system-parachains/runtimes/asset-hubs/common/test-utils' \
 	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-kusama:system-parachains/runtimes/bridge-hubs/bridge-hub-kusama' \
 	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-polkadot:system-parachains/runtimes/bridge-hubs/bridge-hub-polkadot' \
 	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-rococo:system-parachains/runtimes/bridge-hubs/bridge-hub-rococo' \
 	--path-rename 'cumulus/parachains/runtimes/collectives/collectives-polkadot:system-parachains/runtimes/collectives/collectives-polkadot' \
-	--path-rename 'polkadot/runtime/common:relay/common' \
 	--path-rename 'polkadot/runtime/kusama:relay/runtimes/kusama' \
 	--path-rename 'polkadot/runtime/metrics:relay/runtimes/metrics' \
-	--path-rename 'polkadot/runtime/parachains:relay/runtimes/parachains' \
 	--path-rename 'polkadot/runtime/polkadot:relay/runtimes/polkadot'
+
+#	--path-rename 'cumulus/parachains/common:system-parachains/common' \
+#	--path-rename 'cumulus/parachains/runtimes/assets/common:system-parachains/runtimes/asset-hubs/common' \
+#	--path-rename 'polkadot/runtime/parachains:relay/runtimes/parachains' \
+#	--path-rename 'cumulus/pallets/collator-selection:system-parachains/common/pallets/collator-selection' \
+#	--path-rename 'polkadot/runtime/common:relay/common' \
+#	--path-rename 'cumulus/parachains/runtimes/assets/test-utils:system-parachains/runtimes/asset-hubs/common/test-utils' \
 
 # Re-write history to remove all commits that are in unrelated folders.
 # NOTE we cannot use `git filter-repo` here, since it does not account for files that existed outside of the
 # specified folders at one point in time.
 python3 $SCRIPT_DIR/filter-folder.py \
-	system-parachains/common/pallets/collator-selection \
-	system-parachains/common \
+	Cargo.lock \
 	system-parachains/runtimes/asset-hubs/asset-hub-kusama \
 	system-parachains/runtimes/asset-hubs/asset-hub-polkadot \
-	system-parachains/runtimes/asset-hubs/common \
-	system-parachains/runtimes/asset-hubs/common/test-utils \
 	system-parachains/runtimes/bridge-hubs/bridge-hub-kusama \
 	system-parachains/runtimes/bridge-hubs/bridge-hub-polkadot \
 	system-parachains/runtimes/bridge-hubs/bridge-hub-rococo \
 	system-parachains/runtimes/collectives/collectives-polkadot \
-	relay/common \
 	relay/runtimes/kusama \
 	relay/runtimes/metrics \
-	relay/runtimes/parachains \
 	relay/runtimes/polkadot
+
+#system-parachains/common \
+#system-parachains/runtimes/asset-hubs/common \
+#relay/runtimes/parachains \
+#system-parachains/common/pallets/collator-selection \
+#relay/common \
+#system-parachains/runtimes/asset-hubs/common/test-utils \
 
 cd ../polkadot-sdk.filtered
 
@@ -80,13 +84,11 @@ rm -rf polkadot substrate cumulus
 git add --all && git commit -m "Remove trash" $SIGN_ARGS
 
 echo "Fix all the dependencies that were internal, but are not anymore."
-cargo r --manifest-path $SCRIPT_DIR/fix-deps/Cargo.toml -- . $COMMIT_SUB $COMMIT_DOT $COMMIT_CUM
+cargo r --manifest-path $SCRIPT_DIR/fix-deps/Cargo.toml -- .
 echo "Diener workspacify"
 diener workspacify
 
 git add --all && git commit -m "Diener workspacify" $SIGN_ARGS
-
-
 
 echo '
 [workspace.package]
@@ -96,6 +98,14 @@ repository = "https://github.com/paritytech/polkadot.git"
 version = "1.0.0"' >> Cargo.toml
 
 git add --all && git commit -m "Add package metadata to workspace" $SIGN_ARGS
+
+echo "Fix dependnecy revs"
+# We cannot just let the dependencies point to "master", that would get out-dated.
+cargo update -p polkadot-primitives --precise $COMMIT_DOT
+cargo update -p sp-io --precise $COMMIT_SUB
+# NOTE: Assumes to be run against Cumulus master - therefore no patching for that.
+
+git add --all && git commit -m "Fix dependency revs" $SIGN_ARGS
 
 echo "Checking dependency resolves..."
 python3 $SCRIPT_DIR/check-deps.py $PWD

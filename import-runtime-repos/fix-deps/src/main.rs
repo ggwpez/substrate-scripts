@@ -11,7 +11,6 @@ use pathdiff;
 use toml_edit::{Document, Item, Value};
 use std::collections::HashMap;
 
-/// Returns a mapping of `(crate_name -> (github_url, rev))`.
 fn load_rules() -> HashMap<String, String> {
     let mut rules = HashMap::<String, String>::new();
     
@@ -41,17 +40,6 @@ fn main() {
     // Maps crate name to (manifest, path).
     let mut crates = HashMap::<String, (Document, String)>::new();
     let dir = std::env::args().nth(1).expect("missing dir");
-    // Next arguments are `substrate=$REV`, `polkadot=$REV` and `cumulus=$REV`.
-    let mut args = std::env::args().skip(2);
-    let substrate_rev = args.next().expect("missing substrate rev");
-    let polkadot_rev = args.next().expect("missing polkadot rev");
-    let cumulus_rev = args.next().expect("missing cumulus rev");
-    // Build the repo-to-rev map
-    let mut revs = HashMap::<String, String>::new();
-    revs.insert("https://github.com/paritytech/substrate.git".into(), substrate_rev);
-    revs.insert("https://github.com/paritytech/polkadot.git".into(), polkadot_rev);
-    revs.insert("https://github.com/paritytech/cumulus.git".into(), cumulus_rev);
-
     // Recursively read all `Cargo.toml` files.
     for entry in glob::glob(&format!("{}/{}/*.toml", dir, "**")).expect("failed to read glob pattern") {
         // Not in .cargo and not in target.
@@ -112,8 +100,7 @@ fn main() {
                         // Fuck this shitty toml_edit
                         let mut d = &mut crate_manifest[kind][orig_dep_name];
                         d["git"] = Item::Value(Value::from(repo.clone()));
-                        let rev = &revs[repo];
-                        d.as_table_like_mut().unwrap().insert("rev", Item::Value(Value::from(rev)));
+                        d.as_table_like_mut().unwrap().insert("branch", Item::Value(Value::from("master")));
                         d.as_table_like_mut().unwrap().remove("path");
                         println!("  corrected '{dep_name}' with git dependency");
                     } else {

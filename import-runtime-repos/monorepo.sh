@@ -125,10 +125,6 @@ echo "Imported Cumulus  $COMMIT_CUM"
 # git commit -m "Remove duplicate template pallet" $SIGN_ARGS
 
 # FIXME These crates need to be fix upstream before doing the monorepo migration:
-# sed 's|\[workspace\]||g' -i substrate/frame/election-provider-multi-phase/test-staking-e2e/Cargo.toml
-# sed 's|\[workspace\]||g' -i substrate/scripts/ci/node-template-release/Cargo.toml
-# sed 's|\[workspace\]||g' -i polkadot/erasure-coding/fuzzer/Cargo.toml
-# sed 's|0.8|0.16|g' -i substrate/scripts/ci/node-template-release/Cargo.toml
 sed 's|../../Cargo.toml|../../../Cargo.toml|g' -i  cumulus/test/relay-validation-worker-provider/build.rs
 
 #Fix docify
@@ -137,7 +133,8 @@ find substrate/frame -type f -not -path target -exec sed -i 's|docify::embed!("|
 git add --all
 git commit -m "FIXME Hotfix crates" $SIGN_ARGS
 
-rm -rf substrate/Cargo.toml polkadot/Cargo.toml cumulus/Cargo.toml */Cargo.lock
+# Dont delete the Cumulus lockfile, since we use that as base later on.
+rm -rf substrate/Cargo.toml polkadot/Cargo.toml cumulus/Cargo.toml substrate/Cargo.lock polkadot/Cargo.lock
 #diener workspacify
 git add --all
 git commit -m "Clear workspace" $SIGN_ARGS
@@ -172,3 +169,4 @@ rm -rf polkadot-sdk
 
 echo "All done. Output in polkadot-sdk.zip"
 echo "Call the fellowing script like: "
+echo "${SCRIPT_DIR}/fellowship.sh ${CWD} ${COMMIT_SUB} ${COMMIT_DOT} ${COMMIT_CUM}"
