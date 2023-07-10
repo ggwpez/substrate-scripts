@@ -171,3 +171,4 @@ zip -r polkadot-sdk.zip polkadot-sdk -q
 rm -rf polkadot-sdk
 
 echo "All done. Output in polkadot-sdk.zip"
+echo "Call the fellowing script like: "

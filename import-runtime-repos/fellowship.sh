@@ -11,6 +11,16 @@ CWD=$1
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SIGN_ARGS="--signoff --no-gpg-sign"
 
+# Next args are COMMIT_SUB, COMMIT_DOT, COMMIT_CUM
+COMMIT_SUB=$2
+COMMIT_DOT=$3
+COMMIT_CUM=$4
+# Erro if any of these are empty.
+if [ -z "$COMMIT_SUB" ] || [ -z "$COMMIT_DOT" ] || [ -z "$COMMIT_CUM" ]; then
+	echo "Usage: ./fellowship.sh <CWD> <COMMIT_SUB> <COMMIT_DOT> <COMMIT_CUM>"
+	exit 1
+fi
+
 cd $CWD
 echo "Working in $CWD"
 
@@ -70,11 +80,13 @@ rm -rf polkadot substrate cumulus
 git add --all && git commit -m "Remove trash" $SIGN_ARGS
 
 echo "Fix all the dependencies that were internal, but are not anymore."
-cargo r --manifest-path $SCRIPT_DIR/fix-deps/Cargo.toml -- .
+cargo r --manifest-path $SCRIPT_DIR/fix-deps/Cargo.toml -- . $COMMIT_SUB $COMMIT_DOT $COMMIT_CUM
 echo "Diener workspacify"
 diener workspacify
 
 git add --all && git commit -m "Diener workspacify" $SIGN_ARGS
+
+
 
 echo '
 [workspace.package]
