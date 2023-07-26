@@ -127,9 +127,6 @@ echo "Imported Cumulus  $COMMIT_CUM"
 # FIXME These crates need to be fix upstream before doing the monorepo migration:
 sed 's|../../Cargo.toml|../../../Cargo.toml|g' -i  cumulus/test/relay-validation-worker-provider/build.rs
 
-#Fix docify
-find substrate/frame -type f -not -path target -exec sed -i 's|docify::embed!("|docify::embed!("substrate/|g' {} \;
-
 git add --all
 git commit -m "FIXME Hotfix crates" $SIGN_ARGS
 

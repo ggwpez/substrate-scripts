@@ -38,16 +38,16 @@ SIGN_ARGS="--signoff --no-gpg-sign"
 # Re-write history again to move all folders to the correct place.
 git filter-repo --force \
 	--path-rename 'cumulus/Cargo.lock:Cargo.lock' \
-	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-kusama:system-parachains/runtimes/asset-hubs/asset-hub-kusama' \
-	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-polkadot:system-parachains/runtimes/asset-hubs/asset-hub-polkadot' \
-	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-kusama:system-parachains/runtimes/bridge-hubs/bridge-hub-kusama' \
-	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-polkadot:system-parachains/runtimes/bridge-hubs/bridge-hub-polkadot' \
-	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-rococo:system-parachains/runtimes/bridge-hubs/bridge-hub-rococo' \
-	--path-rename 'cumulus/parachains/runtimes/collectives/collectives-polkadot:system-parachains/runtimes/collectives/collectives-polkadot' \
-	--path-rename 'polkadot/runtime/kusama:relay/runtimes/kusama' \
-	--path-rename 'polkadot/runtime/metrics:relay/runtimes/metrics' \
-	--path-rename 'polkadot/runtime/polkadot:relay/runtimes/polkadot'
+	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-kusama:system-parachains/asset-hubs/asset-hub-kusama' \
+	--path-rename 'cumulus/parachains/runtimes/assets/asset-hub-polkadot:system-parachains/asset-hubs/asset-hub-polkadot' \
+	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-kusama:system-parachains/bridge-hubs/bridge-hub-kusama' \
+	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-polkadot:system-parachains/bridge-hubs/bridge-hub-polkadot' \
+	--path-rename 'cumulus/parachains/runtimes/bridge-hubs/bridge-hub-rococo:system-parachains/bridge-hubs/bridge-hub-rococo' \
+	--path-rename 'cumulus/parachains/runtimes/collectives/collectives-polkadot:system-parachains/collectives/collectives-polkadot' \
+	--path-rename 'polkadot/runtime/kusama:relay/kusama' \
+	--path-rename 'polkadot/runtime/polkadot:relay/polkadot'
 
+#	--path-rename 'polkadot/runtime/metrics:relay/runtimes/metrics' \
 #	--path-rename 'cumulus/parachains/common:system-parachains/common' \
 #	--path-rename 'cumulus/parachains/runtimes/assets/common:system-parachains/runtimes/asset-hubs/common' \
 #	--path-rename 'polkadot/runtime/parachains:relay/runtimes/parachains' \
@@ -60,16 +60,16 @@ git filter-repo --force \
 # specified folders at one point in time.
 python3 $SCRIPT_DIR/filter-folder.py \
 	Cargo.lock \
-	system-parachains/runtimes/asset-hubs/asset-hub-kusama \
-	system-parachains/runtimes/asset-hubs/asset-hub-polkadot \
-	system-parachains/runtimes/bridge-hubs/bridge-hub-kusama \
-	system-parachains/runtimes/bridge-hubs/bridge-hub-polkadot \
-	system-parachains/runtimes/bridge-hubs/bridge-hub-rococo \
-	system-parachains/runtimes/collectives/collectives-polkadot \
-	relay/runtimes/kusama \
-	relay/runtimes/metrics \
-	relay/runtimes/polkadot
+	system-parachains/asset-hubs/asset-hub-kusama \
+	system-parachains/asset-hubs/asset-hub-polkadot \
+	system-parachains/bridge-hubs/bridge-hub-kusama \
+	system-parachains/bridge-hubs/bridge-hub-polkadot \
+	system-parachains/bridge-hubs/bridge-hub-rococo \
+	system-parachains/collectives/collectives-polkadot \
+	relay/kusama \
+	relay/polkadot
 
+#relay/runtimes/metrics \
 #system-parachains/common \
 #system-parachains/runtimes/asset-hubs/common \
 #relay/runtimes/parachains \
