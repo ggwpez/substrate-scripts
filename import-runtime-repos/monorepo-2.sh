@@ -48,6 +48,7 @@ echo '
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2021"
 repository = "https://github.com/paritytech/polkadot.git"
+license = "GPL-3.0-only"
 version = "1.0.0"' >> Cargo.toml
 
 git add --all && git commit -m "Add package metadata to workspace" $SIGN_ARGS
