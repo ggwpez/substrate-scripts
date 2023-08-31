@@ -36,12 +36,13 @@ def main():
     accounts = []
     account_query = chain.query_map('System', 'Account', page_size=1000)
 
+    NEW_LOGIC_FLAG = 0x80000000_00000000_00000000_00000000
+
     for (i, (id, info)) in enumerate(account_query):
         account = info['data']
-        frozen = account['frozen']
-        reserved = account['reserved']
+        flags = account['flags'].decode()
 
-        if reserved > 0 or frozen > 0:
+        if flags & NEW_LOGIC_FLAG == 0:
             accounts.append(id.value)
 
         if i % 5000 == 0 and i > 0:
