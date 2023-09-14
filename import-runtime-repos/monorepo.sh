@@ -10,7 +10,7 @@
 #  Create some work dir: mkdir ../../tmp
 #  ./monorepo.sh ../../tmp
 
-set -ex
+set -eo pipefail
 
 # First arg is the CWD.
 CWD=$1
@@ -18,20 +18,54 @@ CWD=$1
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 SIGN_ARGS="--signoff --no-gpg-sign"
+#SIGN_ARGS=""
+
+# sha of cumulus/Cargo.lock file
+#CUMULUS_SHA="7ab9d4f5baa87f8fee5a6e820a2ee8e4f0bdba44" # very old
+#CUMULUS_SHA="21919c89ad99fc4e2e6f12dd6679eb2d41892ac3" # old
+CUMULUS_SHA=$(curl -s "https://api.github.com/repos/paritytech/cumulus/commits?path=Cargo.lock&per_page=1" | jq -r '.[0].sha')
 
 cd $CWD
 
-echo "Cloning Polkadot..."
-git clone https://github.com/paritytech/polkadot polkadot2 --branch master --quiet
-cd polkadot2 && git reset --hard 1d8ccbffd1235d4d1d3a0bf02132d8ea9105078f && cd ..
+echo "Removing old dirs..."
+# NOTE we append `2` here in case some dingus runs it in his 'work' dir.
+[ -d "cumulus2" ] && rm -rf cumulus2/
+[ -d "polkadot2" ] && rm -rf polkadot2/
+[ -d "substrate2" ] && rm -rf substrate2/
 
-echo "Cloning Cumulus..."
-git clone https://github.com/paritytech/cumulus cumulus2 --branch master --quiet
-cd cumulus2 && git reset --hard cd91e6be5f385fab6584842c5fc34514207ca1c5 && cd ..
+echo "Cloning Cumulus at ${CUMULUS_SHA}..."
+# Either unzip the cumulus.zip file or clone the repo.
+if [ -f "cumulus2.zip" ]; then
+	unzip -q cumulus2.zip
+else
+	git clone https://github.com/paritytech/cumulus cumulus2 --quiet
+	zip -r cumulus2.zip cumulus2
+fi
+cd cumulus2 && git reset --hard $CUMULUS_SHA
 
-echo "Cloning Substrate..."
-git clone https://github.com/paritytech/substrate substrate2 --branch master --quiet
-cd substrate2 && git reset --hard 74b2c92066ec3abcb612faa9272f246ae339fab3 && cd ..
+SUBSTRATE_SHA=$(cat Cargo.lock| grep 'substrate?' | uniq | sed 's/source = "git+https:\/\/github.com\/paritytech\/substrate?branch=master#//' | sed 's/"//')
+POLKADOT_SHA=$(cat Cargo.lock| grep 'polkadot?' | uniq | sed 's/source = "git+https:\/\/github.com\/paritytech\/polkadot?branch=master#//' | sed 's/"//')
+cd ..
+
+echo "Cloning Polkadot at ${POLKADOT_SHA}..."
+# Either unzip the polkadot.zip file or clone the repo.
+if [ -f "polkadot2.zip" ]; then
+	unzip -q polkadot2.zip
+else
+	git clone https://github.com/paritytech/polkadot polkadot2 --branch master --quiet
+	zip -r polkadot2.zip polkadot2
+fi
+cd polkadot2 && git reset --hard $POLKADOT_SHA && cd ..
+
+echo "Cloning Substrate at ${SUBSTRATE_SHA}..."
+# Either unzip the substrate.zip file or clone the repo.
+if [ -f "substrate2.zip" ]; then
+	unzip -q substrate2.zip
+else
+	git clone https://github.com/paritytech/substrate substrate2 --branch master --quiet
+	zip -r substrate2.zip substrate2
+fi
+cd substrate2 && git reset --hard $SUBSTRATE_SHA && cd ..
 
 cd polkadot2/
 COMMIT_DOT=$(git rev-parse HEAD)
@@ -50,9 +84,11 @@ git filter-repo --to-subdirectory-filter substrate --quiet --force
 # You can comment out the commands above if you have a copy already.
 cd ..
 
-mkdir -p monorepo
-cd monorepo
-git init .
+mkdir -p polkadot-sdk
+cd polkadot-sdk
+git init -b master .
+#git clone git@github.com:paritytech-stg/polkadot-sdk.git polkadot-sdk-new
+#cd polkadot-sdk-new
 touch .gitignore
 git add .gitignore
 git commit -m "Init" $SIGN_ARGS -q
@@ -84,33 +120,30 @@ echo "Imported Polkadot $COMMIT_DOT"
 echo "Imported Cumulus  $COMMIT_CUM"
 
 # Otherwise we have two crates named `pallet-template`.
-rm -rf cumulus/parachain-template/pallets/template/Cargo.toml
-git add -u
-git commit -m "Remove duplicate template pallet" $SIGN_ARGS
+# rm -rf cumulus/parachain-template/pallets/template/Cargo.toml
+# git add -u
+# git commit -m "Remove duplicate template pallet" $SIGN_ARGS
 
 # FIXME These crates need to be fix upstream before doing the monorepo migration:
-sed 's|\[workspace\]||g' -i substrate/frame/election-provider-multi-phase/test-staking-e2e/Cargo.toml
-sed 's|\[workspace\]||g' -i substrate/scripts/ci/node-template-release/Cargo.toml
-sed 's|\[workspace\]||g' -i polkadot/erasure-coding/fuzzer/Cargo.toml
-sed 's|0.8|0.16|g' -i substrate/scripts/ci/node-template-release/Cargo.toml
 sed 's|../../Cargo.toml|../../../Cargo.toml|g' -i  cumulus/test/relay-validation-worker-provider/build.rs
 
 git add --all
 git commit -m "FIXME Hotfix crates" $SIGN_ARGS
 
-rm -rf substrate/Cargo.toml polkadot/Cargo.toml cumulus/Cargo.toml */Cargo.lock
-diener workspacify
+# Dont delete the Cumulus lockfile, since we use that as base later on.
+rm -rf substrate/Cargo.toml polkadot/Cargo.toml cumulus/Cargo.toml substrate/Cargo.lock polkadot/Cargo.lock
+#diener workspacify
 git add --all
-git commit -m "Setup workspace with diener" $SIGN_ARGS
+git commit -m "Clear workspace" $SIGN_ARGS
 
-echo '
-[workspace.package]
-authors = ["Parity Technologies <admin@parity.io>"]
-edition = "2021"
-repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"' >> Cargo.toml
-
-git add -u && git commit -m "Fix Workspace" $SIGN_ARGS
+#echo '
+#[workspace.package]
+#authors = ["Parity Technologies <admin@parity.io>"]
+#edition = "2021"
+#repository = "https://github.com/paritytech/polkadot.git"
+#version = "0.9.41"' >> Cargo.toml
+#
+#git add --all && git commit -m "Fix Workspace" $SIGN_ARGS
 
 echo "Running sanity checks..."
 COMMITS=$(git log --no-merges -M --oneline --follow -- substrate/README.md | wc -l)
@@ -126,9 +159,11 @@ if [ "$COMMITS" -ne "42" ]; then
 	echo "Wrong number of commits, got $COMMITS"
 fi
 
-echo "Checking dependency resolves..."
-python $SCRIPT_DIR/check-deps.py $PWD
-echo "Checking build..."
-SKIP_WASM_BUILD=1 cargo test "*-runtime" # Build all but only execute 'runtime' tests.
+cd ..
+rm -rf polkadot-sdk.zip
+zip -r polkadot-sdk.zip polkadot-sdk -q
+rm -rf polkadot-sdk
 
-echo "All done"
+echo "All done. Output in polkadot-sdk.zip"
+echo "Call the fellowing script like: "
+echo "${SCRIPT_DIR}/fellowship.sh ${CWD} ${COMMIT_SUB} ${COMMIT_DOT} ${COMMIT_CUM}"
