@@ -162,7 +162,7 @@ LOCKS=$(sha256sum -c runtime-hashlocks.txt)
 if [[ $LOCKS != *"OK"* ]]; then
 	# Just a warning in this case:
 	sha256sum -c runtime-hashlocks.txt || true
-	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code was checked to match. Otherwise retry with latest Rust Stable 1.72\n⚠⚠⚠"
+	echo "⚠⚠⚠ WASM RUNTIME HASHES MITMATCH ⚠⚠⚠\nThis may be acceptible since the code was checked to match. Otherwise retry with latest Rust Stable 1.72."
 else
-	echo "✅ Advisory check passed; WASM blob hashes match."
+	echo "✅ Final advisory check passed; WASM blob hashes match."
 fi
