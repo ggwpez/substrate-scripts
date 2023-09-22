@@ -150,8 +150,8 @@ fi
 echo "Runtimes compiled."
 cd ..
 
-LOCKS=$(sha256sum -c runtime-hashlocks.txt --status)
-if [[ $LOCKS != "" ]]; then
+LOCKS=$(sha256sum -c runtime-hashlocks.txt)
+if [[ $LOCKS != *"OK"* ]]; then
 	# Just a warning in this case:
 	sha256sum -c runtime-hashlocks.txt || true
 	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code will be checked to match.\n⚠⚠⚠"
