@@ -146,16 +146,16 @@ else
 	echo "✅ REPRODUCED CHECKPOINT ${CHECK_6:0:10}"
 fi
 
-echo "Runtimes compiled. Checking hash locks ..."
+echo "Runtimes compiled."
 cd ..
 
 LOCKS=$(sha256sum -c runtime-hashlocks.txt --status)
 if [[ $LOCKS != "" ]]; then
 	# Just a warning in this case:
 	sha256sum -c runtime-hashlocks.txt || true
-	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code was checked to match.\n⚠⚠⚠"
+	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code will be checked to match.\n⚠⚠⚠"
 else
-	echo "✅ RUNTIME HASHES MATCH"
+	echo "✅ WASM BLOB HASHES MATCH"
 fi
 
 cd $RUNTIMES_REPO
