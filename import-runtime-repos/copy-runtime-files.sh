@@ -129,6 +129,7 @@ else
 fi
 
 # Some sanity checking of the deps:
+python3 -m pip install toml
 python3 ../check-deps.py $PWD
 
 cp ../$MONO_REPO/Cargo.lock .
