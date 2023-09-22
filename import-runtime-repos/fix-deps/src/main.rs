@@ -1,3 +1,5 @@
+//! This program replaces all `path` and `git` dependencies in the workspace with crates-io and crates-io dependencies with local ones (if available).
+
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
@@ -22,7 +24,7 @@ async fn load_latest_version(krate: &str) -> String {
     // the first two chars
     let p0 = &krate[0..2];
     let p1 = &krate[2..4];
-    eprint!("Requesting '{krate}' from index.crates.io ...");
+    eprint!("Fetching {krate} ...");
 
     let url = format!("https://index.crates.io/{p0}/{p1}/{krate}");
     let body = reqwest::get(&url).await.expect("failed to get crate info").text().await.expect("failed to get crate info");
@@ -30,7 +32,7 @@ async fn load_latest_version(krate: &str) -> String {
     let line = lines[lines.len() - 2];
     let manifest = serde_json::from_str::<JsonValue>(line).expect("failed to parse json");
     let version = manifest["vers"].as_str().expect("failed to get version").to_string();
-    eprintln!(" -> {}", version);
+    eprintln!(" {}", version);
     // Append to the cache
     let mut file = OpenOptions::new()
         .write(true)
@@ -99,7 +101,7 @@ async fn main() {
     for (crate_name, (ocrate_manifest, crate_path)) in crates.iter() {
         let mut crate_manifest = ocrate_manifest.clone();
         eprintln!("Checking {crate_name}");
-        let mut corrected = false;
+        let mut corrected = 0;
         for kind in ["dev-dependencies", "dependencies", "build-dependencies"] {
             if !crate_manifest.as_table().contains_key(kind) {
                 continue;
@@ -130,27 +132,27 @@ async fn main() {
                     // Calculate the relative path from the manifest to the dep
                     let rel_path = pathdiff::diff_paths(&dep_path, &crate_path).expect("failed to calculate relative path");
                     if rel_path.to_str().unwrap() != import_path.as_str().unwrap() {
-                        corrected = true;
+                        corrected += 1;
                         let mut d = &mut crate_manifest[kind][orig_dep_name];
                         d["path"] = Item::Value(Value::from(rel_path.to_str().unwrap().to_string()));
-                        println!("  corrected '{dep_name}' with path '{rel_path}'", dep_name = dep_name, rel_path = rel_path.display());
+                        println!("  corrected {dep_name} (local)");
                     }
                 } else {
-                    corrected = true;
+                    corrected += 1;
                     let mut d = &mut crate_manifest[kind][orig_dep_name];
                     d.as_table_like_mut().unwrap().insert("version", Item::Value(Value::from(version)));
                     d.as_table_like_mut().unwrap().remove("path");
                     d.as_table_like_mut().unwrap().remove("git");
-                    eprintln!("  corrected '{dep_name}' with crates-io dependency");
+                    eprintln!("  corrected {dep_name} (crates.io)");
                 }
             }
         }
 
-        if corrected {
+        if corrected > 0 {
             // Write the manifest back to disk
             let crate_path = format!("{}/Cargo.toml", crate_path);
             std::fs::write(crate_path.clone(), crate_manifest.to_string()).expect("failed to write manifest");
-            eprintln!("Wrote {}", crate_path);
+            eprintln!("Corrected {corrected} deps in {}", crate_path);
         }
     }
 }

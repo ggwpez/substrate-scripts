@@ -4,7 +4,7 @@ import datetime
 from config import parse_args
 
 base_compile = "%s build --bin %s --profile=%s --locked --features=runtime-benchmarks"
-bench = "./target/%s/%s benchmark pallet --chain=%s --steps=%s --repeat=%s --pallet='%s' --extrinsic='%s' --execution=wasm --wasm-execution=compiled --heap-pages=4096 --output=%s"# --template=%s --header=%s"
+bench = "./target/%s/%s benchmark pallet --chain=%s --steps=%s --repeat=%s --pallet='%s' --extrinsic='%s' --output=%s"# --template=%s --header=%s"
 
 project_to_bin = {
 	"substrate": "substrate",
