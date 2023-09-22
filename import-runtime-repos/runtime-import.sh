@@ -25,7 +25,7 @@ if [[ ! -d "polkadot-sdk" ]]; then
 	git clone https://github.com/paritytech/polkadot-sdk --branch v1.1.0-rc2 --depth 1 polkadot-sdk -q
 else
 	cd polkadot-sdk
-	git checkout v1.1.0-rc2
+	git checkout v1.1.0-rc2 -q
 	cd ..
 fi
 
@@ -35,7 +35,7 @@ if [[ ! -d "runtimes" ]]; then
 	git clone https://github.com/polkadot-fellows/runtimes --branch main -q
 else
 	cd runtimes
-	git checkout main
+	git checkout main -q
 	cd ..
 fi
 

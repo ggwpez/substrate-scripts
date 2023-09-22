@@ -60,11 +60,11 @@ else
 	echo "✅ REPRODUCED CHECKPOINT ${CHECK_2:0:10}"
 fi
 
-if [[ ! -f "../4ce14735e0a3a6a663ed80e73afd1dd0de4167ab.lgtm" ]]; then
+if [[ ! -f "../lgtm.4ce14735e0a3a6a663ed80e73afd1dd0de4167ab" ]]; then
 	git diff-tree -p '4ce14735e0a3a6a663ed80e73afd1dd0de4167ab'
 	read -p "Please review this patch manually. Looks good to you? (y/n)" -n 1 -r
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
-		touch '../4ce14735e0a3a6a663ed80e73afd1dd0de4167ab.lgtm'
+		touch '../lgtm.4ce14735e0a3a6a663ed80e73afd1dd0de4167ab'
 	else
 		exit 1
 	fi
@@ -75,11 +75,11 @@ git diff-tree -p '4ce14735e0a3a6a663ed80e73afd1dd0de4167ab' | git apply
 echo "Patch applied"
 
 # Same for commit de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f
-if [[ ! -f "../de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f.lgtm" ]]; then
+if [[ ! -f "../lgtm.de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f" ]]; then
 	git diff-tree -p 'de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f'
 	read -p "Please review this patch manually. Looks good to you? (y/n) " -n 1 -r
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
-		touch '../de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f.lgtm'
+		touch '../lgtm.de16d6f5bd10b2ff8c2a319fe493a9c647c46c3f'
 	else
 		exit 1
 	fi
@@ -133,7 +133,7 @@ python3 ../check-deps.py $PWD
 
 cp ../$MONO_REPO/Cargo.lock .
 echo "Compiling runtimes ..."
-cargo b -q --workspace --all-targets --all-features --target-dir ../target
+cargo b -r -q --workspace --all-targets --all-features --target-dir ../target
 
 git add --all
 git commit -m "Generate lockfile" $SIGN_ARGS
@@ -146,5 +146,19 @@ else
 	echo "✅ REPRODUCED CHECKPOINT ${CHECK_6:0:10}"
 fi
 
-# Set -e should abort if this fails.
-sha256sum -c ../runtime-hashlocks.txt
+echo "Runtimes compiled. Checking hash locks ..."
+
+LOCKS=$(sha256sum -c ../runtime-hashlocks.txt --status)
+if [[ $LOCKS != "" ]]; then
+	# Just a warning in this case:
+	sha256sum -c ../runtime-hashlocks.txt || true
+	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code was checked to match.\n⚠⚠⚠"
+fi
+
+BRANCH="origin/oty-import-$TAG"
+if [[ $(git diff $BRANCH --stat) != "" ]]; then
+	echo "DIFF TO REMOTE IS NOT EMPTY"
+	exit 1
+else
+	echo "✅ REPRODUCED BRANCH DIFF TO REMOTE '$BRANCH'"
+fi

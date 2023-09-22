@@ -63,12 +63,10 @@ crates.sort()
 links.sort()
 broken.sort()
 
-for crate in crates:
-	print("🔎 %s" % crate)
 print("📜 Found %d crates in the workspace" % len(crates))
 
 for link in links:
-	print("✅ %s -> %s" % link)
+	print("🔗 %s -> %s" % link)
 for link in broken:
 	print("❌ %s -> %s" % link)
 
@@ -76,4 +74,4 @@ if len(broken) > 0:
 	print("💥 %d out of %d links are broken" % (len(broken), len(links)))
 	sys.exit(1)
 else:
-	print("✅ All %d links are correct" % len(links))
+	print("✅ All %d local links are correct since they DO NOT use crates-io." % len(links))

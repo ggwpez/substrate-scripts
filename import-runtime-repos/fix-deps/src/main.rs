@@ -21,7 +21,6 @@ const CACHE: &'static str = ".crates-io-cache.txt";
 /// Requests the latest version from index.crates.io.
 async fn load_latest_version(krate: &str) -> String {
     assert!(krate.len() > 4);
-    // the first two chars
     let p0 = &krate[0..2];
     let p1 = &krate[2..4];
     eprint!("Fetching {krate} ...");
@@ -46,7 +45,6 @@ async fn load_latest_version(krate: &str) -> String {
 fn load_from_cache() -> HashMap<String, String> {
     if !std::path::Path::new(CACHE).exists() {
         eprintln!("Cache does not exist");
-        // create empty
         return HashMap::new();
     }
     let body = std::fs::read_to_string(CACHE).expect("failed to read cache");
