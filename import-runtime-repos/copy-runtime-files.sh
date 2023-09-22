@@ -98,7 +98,7 @@ else
 fi
 
 # Replace parachain-info with staging-parachain-info
-find . -name 'Cargo.toml' -exec sed -i '' 's/parachain-info \= {/parachain-info = { package = "staging-parachain-info",/g' {} +
+find . -name 'Cargo.toml' -exec perl -i -pe 's/parachain-info \= {/parachain-info = { package = "staging-parachain-info",/g' {} +
 
 git add --all
 git commit -m "Replace parachain-info with staging-parachain-info" $SIGN_ARGS
@@ -147,18 +147,22 @@ else
 fi
 
 echo "Runtimes compiled. Checking hash locks ..."
+cd ..
 
-LOCKS=$(sha256sum -c ../runtime-hashlocks.txt --status)
+LOCKS=$(sha256sum -c runtime-hashlocks.txt --status)
 if [[ $LOCKS != "" ]]; then
 	# Just a warning in this case:
-	sha256sum -c ../runtime-hashlocks.txt || true
+	sha256sum -c runtime-hashlocks.txt || true
 	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code was checked to match.\n⚠⚠⚠"
+else
+	echo "✅ RUNTIME HASHES MATCH"
 fi
 
+cd $RUNTIMES_REPO
 BRANCH="origin/oty-import-$TAG"
 if [[ $(git diff $BRANCH --stat) != "" ]]; then
 	echo "DIFF TO REMOTE IS NOT EMPTY"
 	exit 1
 else
-	echo "✅ REPRODUCED BRANCH DIFF TO REMOTE '$BRANCH'"
+	echo "✅ FINAL CHECK PASSED. EMPTY DIFF TO REMOTE '$BRANCH'."
 fi

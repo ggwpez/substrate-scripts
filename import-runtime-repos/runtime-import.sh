@@ -7,6 +7,7 @@ set -eo pipefail
 # Requirements:
 # - Stable Rust version
 # - python3
+# - perl
 # - sha256sum
 # - git
 
@@ -16,6 +17,12 @@ export SIGN_ARGS="--signoff --no-gpg-sign"
 # check folder name:
 if [[ ! $(basename "$PWD") == "import-runtime-repos" ]]; then
 	echo "Please run this script from the import-runtime-repos folder."
+	exit 1
+fi
+
+# Check if sha256sum is available
+if ! command -v sha256sum &> /dev/null; then
+	echo "sha256sum could not be found. Please run 'brew install coreutils' or 'apt install coreutils' to install it."
 	exit 1
 fi
 
