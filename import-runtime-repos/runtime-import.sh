@@ -5,7 +5,7 @@ set -eo pipefail
 # Please run the script in this directory.
 
 # Requirements:
-# - Stable Rust version
+# - Stable Rust version 1.72 (latest)
 # - python3
 # - perl
 # - sha256sum

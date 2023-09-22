@@ -148,22 +148,21 @@ else
 fi
 
 echo "Runtimes compiled."
-cd ..
 
-LOCKS=$(sha256sum -c runtime-hashlocks.txt)
-if [[ $LOCKS != *"OK"* ]]; then
-	# Just a warning in this case:
-	sha256sum -c runtime-hashlocks.txt || true
-	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code will be checked to match.\n⚠⚠⚠"
-else
-	echo "✅ WASM BLOB HASHES MATCH"
-fi
-
-cd $RUNTIMES_REPO
 BRANCH="origin/oty-import-$TAG"
 if [[ $(git diff $BRANCH --stat) != "" ]]; then
 	echo "DIFF TO REMOTE IS NOT EMPTY"
 	exit 1
 else
-	echo "✅ FINAL CHECK PASSED. EMPTY DIFF TO REMOTE '$BRANCH'."
+	echo "✅ FINAL CHECK PASSED. EMPTY DIFF TO REMOTE '$BRANCH'"
+fi
+
+cd ..
+LOCKS=$(sha256sum -c runtime-hashlocks.txt)
+if [[ $LOCKS != *"OK"* ]]; then
+	# Just a warning in this case:
+	sha256sum -c runtime-hashlocks.txt || true
+	echo "⚠⚠⚠\nWASM RUNTIME HASHES MITMATCH\nThis may be acceptible since the code was checked to match. Otherwise retry with latest Rust Stable 1.72\n⚠⚠⚠"
+else
+	echo "✅ Advisory check passed; WASM blob hashes match."
 fi
