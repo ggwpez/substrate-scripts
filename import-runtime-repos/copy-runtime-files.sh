@@ -18,7 +18,8 @@ COMMIT=$(git rev-parse HEAD)
 
 cd ../$RUNTIMES_REPO
 git add --all && git stash push && git stash drop || true
-git checkout main
+# This is the master commit right before the PR this MR was created:
+git checkout bf6da3ce9eb100b88a30a904ffe2e3389cdacd70
 git branch -D oty-import-$TAG || true
 git checkout -b oty-import-$TAG
 cd ..
