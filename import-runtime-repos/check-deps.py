@@ -1,4 +1,13 @@
 # Ensures that workspace dependencies are resolved via `path` and not something else.
+# Also checks that all crates are part of the Rust workspace.
+
+# Invocation:
+#  python check-deps.py polkadot-sdk/
+# Example output:
+#  🔎 Checking folder polkadot-sdk/
+#  📜 Found workspace manifest
+#  📜 Found 441 crates in the workspace
+#  ✅ All 5307 dependency links are correct
 
 import os
 import sys
