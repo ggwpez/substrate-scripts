@@ -23,17 +23,22 @@ in_workspace = []
 for root, dirs, files in os.walk(DIR):
 	if "target" in root:
 		continue
+
 	for file in files:
-		if file == "Cargo.toml":
-			path = os.path.join(root, file)
-			with open(path, "r") as f:
-				content = f.read()
-				manifest = toml.loads(content)
-				if 'workspace' in manifest:
-					for member in manifest['workspace']['members']:
-						in_workspace.append(member)
-					continue
-				manifests.append(manifest)
+		if file != "Cargo.toml":
+			continue
+
+		path = os.path.join(root, file)
+		with open(path, "r") as f:
+			content = f.read()
+			manifest = toml.loads(content)
+
+			if 'workspace' in manifest:
+				for member in manifest['workspace']['members']:
+					in_workspace.append(member)
+				continue
+
+			manifests.append(manifest)
 
 if len(in_workspace) != len(manifests):
 	print("💥 Crates are missing from the workspace Cargo.toml")
@@ -44,6 +49,7 @@ for manifest in manifests:
 	crates.append(name)
 
 links = []
+git_links = []
 broken = []
 # Now check that all the deps are correct.
 for manifest in manifests:
@@ -51,10 +57,12 @@ for manifest in manifests:
 
 	def check_deps(deps):
 		for dep in deps:
-			# Account for renames.
+			# Account for renames:
 			dep_name = dep
 			if 'package' in deps[dep]:
 				dep_name = deps[dep]['package']
+			if 'git' in deps[dep]:
+				git_links.append((name, dep_name))
 			if dep_name in crates:
 				links.append((name, dep_name))
 
@@ -74,8 +82,8 @@ broken.sort()
 
 print("📜 Found %d crates in the workspace" % len(crates))
 
-for link in links:
-	print("🔗 %s -> %s" % link)
+for link in git_links:
+	print("❗ %s -> %s (uses Git)" % link)
 for link in broken:
 	print("❌ %s -> %s" % link)
 
@@ -83,4 +91,4 @@ if len(broken) > 0:
 	print("💥 %d out of %d links are broken" % (len(broken), len(links)))
 	sys.exit(1)
 else:
-	print("✅ All %d local links are correct since they DO NOT use crates-io." % len(links))
+	print("✅ All %d local links are correct." % len(links))
