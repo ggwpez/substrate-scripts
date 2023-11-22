@@ -40,7 +40,7 @@ def main():
         account = info['data']
         frozen = account['frozen']
         reserved = account['reserved']
-        flags = account['flags'].decode()
+        flags = account['flags']
 
         if (reserved > 0 or frozen > 0) and flags == 0:
             accounts.append(id.value)
