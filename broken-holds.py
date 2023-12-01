@@ -34,7 +34,12 @@ json.dump(reserves, open("reserves.json", "w"), indent=2)
 bad_account = []
 for (acc, reserve) in reserves.items():
 	reserve = 0 if reserve is None else reserve
-	hold = 0 if acc not in holds else holds[acc]
+	
+	if acc not in holds:
+		hold = 0
+	else:
+		for h in holds[acc]:
+			hold += h['amount']
 
 	if reserve != hold:
 		print(f"Account {acc} has {reserve} reserved but {hold} held")
