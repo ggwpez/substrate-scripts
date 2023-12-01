@@ -25,7 +25,6 @@ for root, dirs, files in os.walk(cwd):
 					break
 
 for path in runtime_folders:
-	continue
 	print("Generating chain spec for %s" % path)
 	# Call the polkadot node and generate the chain spec.
 	binary = polkadot
@@ -86,6 +85,7 @@ for path in runtime_folders:
 			if pallet not in pallets and pallet != "pallet":
 				pallets.append(pallet)
 				print("Found pallet: %s" % pallet)
+	
 	# Now run the benchmarks for each pallet.
 	for pallet in pallets:
 		cmd = "%s benchmark pallet --steps=2 --repeat=1 --chain=%s --pallet=%s --extrinsic="" --output=%s --header=%s --steps=2 --repeat=1 --no-median-slopes --no-min-squares" % (binary, spec, pallet, os.path.join(cwd, path, "src", "weights"), os.path.join(script_path, "header.txt"))
