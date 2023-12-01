@@ -43,7 +43,7 @@ for path in runtime_folders:
 	try:
 		subprocess.check_call(cmd, shell=True)
 	except subprocess.CalledProcessError as e:
-		print("❌ Failed to generate spec for %s" % runtime)
+		print("❌ Failed to generate spec for %s: %s" % (runtime, e))
 		continue
 	
 	# Fixup spec file
@@ -60,7 +60,7 @@ for path in runtime_folders:
 		
 		print("✅ Patched %s" % spec)
 	except Exception as e:
-		print("❌ Failed to patch spec %s" % runtime)
+		print("❌ Failed to patch spec for %s: %s" % (runtime, e))
 		continue
 
 # Run the benchmarks:
@@ -80,7 +80,7 @@ for path in runtime_folders:
 	try:
 		output = subprocess.check_output(cmd, shell=True)
 	except subprocess.CalledProcessError as e:
-		print("❌ Failed to list benchmarks for %s" % path)
+		print("❌ Failed to list benchmarks for %s: %s" % (path, e))
 		continue
 	pallets = []
 	for line in output.decode("utf-8").split("\n"):
@@ -98,6 +98,6 @@ for path in runtime_folders:
 		try:
 			subprocess.check_call(cmd, shell=True)
 		except subprocess.CalledProcessError as e:
-			print("❌ Failed to run benchmarks for %s" % path)
+			print("❌ Failed to run benchmarks for %s: %s" % (path, e))
 			continue
 		print("✅ Ran benchmarks for %s" % path)
