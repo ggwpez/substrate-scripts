@@ -3,6 +3,11 @@ import json
 import subprocess
 import sys
 
+if len(sys.argv) < 3:
+	print("Usage: %s <runtimes-repo> <polkadot-and-parachain-binary-path>" % sys.argv[0])
+	sys.exit(1)
+
+
 # First arg is the cwd
 cwd = os.path.abspath(os.path.expanduser(os.path.expandvars(sys.argv[1])))
 # Second arg is the polkadot node
@@ -55,7 +60,7 @@ for path in runtime_folders:
 		
 		print("✅ Patched %s" % spec)
 	except Exception as e:
-		print("❌ Failed to patch spec for %s" % runtime)
+		print("❌ Failed to patch spec %s" % runtime)
 		continue
 
 # Run the benchmarks:
