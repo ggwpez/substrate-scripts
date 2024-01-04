@@ -55,6 +55,7 @@ def main():
 				'hashes': chunk,
 			}
 		)
+		extrinsic = chain.create_signed_extrinsic(call=call, keypair=sender)
 		print(f"Transaction {i + 1}: upgrading {len(chunk)} preimages")
 
 		try:
