@@ -40,16 +40,17 @@ weight_second = 1e12
 decimals = chain.token_decimals or 0
 
 def main():
-	while True:
-		unmigrated = identities(BATCH_SIZE)
-		if len(unmigrated) == 0:
-			print("No identities to migrate - finish")
-			return
+	unmigrated = identities()
+	if len(unmigrated) == 0:
+		print("No identities to migrate - finish")
+		return
 
-		print(f"Migrating {len(unmigrated)} identities")
+	print(f"Migrating {len(unmigrated)} identities")
 
+	for chunk in chunks(unmigrated, BATCH_SIZE):
 		batch = []
-		for (i, user) in enumerate(unmigrated):
+
+		for user in chunk:
 			batch.append(chain.compose_call(
 				call_module='IdentityMigrator',
 				call_function='reap_identity',
@@ -81,16 +82,22 @@ def main():
 			raise e
 
 # Get the next `page_size` identities to be migrated.
-def identities(page_size):
-	print(f'Fetching the next {page_size} identities to be migrated')
-	query = chain.query_map('Identity', 'IdentityOf', page_size=page_size)
+def identities():
+	print(f'Fetching the identities to be migrated')
+	query = chain.query_map('Identity', 'IdentityOf')
 
 	accs = []
 	for (account, data) in query:
-		if len(accs) == page_size:
-			break
 		accs.append(account.value)
 	return accs
+
+def chunks(list, n):
+	"""
+	Lazily split 'list' into 'n'-sized chunks.
+	"""
+	for i in range(0, len(list), n):
+		yield list[i:i + n]
+
 
 if __name__ == "__main__":
 	main()
