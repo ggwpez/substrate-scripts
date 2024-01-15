@@ -26,8 +26,8 @@ chain = SubstrateInterface(
 	#url="ws://127.0.0.1:9944",
 	# Using the public endpoint can get you rate-limited.
 	# url="wss://kusama-rpc.polkadot.io",
-	# These Parity internals are not limited.
-	url="wss://rococo-public-rpc.blockops.network/ws"
+	# Or use some external node:
+	url="wss://rococo-try-runtime-node.parity-chains.parity.io:443"
 )
 
 print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
