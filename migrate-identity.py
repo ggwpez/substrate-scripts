@@ -1,17 +1,17 @@
 """
 SPDX-License-Identifier: GPL-3.0-only
 
-This script runs a lazy migration on the preimage pallet for:
+This script runs migration for the identity pallet for:
 	<https://github.com/paritytech/polkadot-sdk/pull/1814>
 
 Install the dependency:
 	pip install substrate-interface
 Set the env variable `SENDER_URI` and run:
-	python3 migrate-preimage-lazy.py
+	python3 migrate-identity.py
 """
 
 """
-The batch size for each call to `ensure_updated`.
+The batch size for each call to `reap_identity`.
 It is set to a small value such that in case of a bug, the script wont burn
 through a lot of funds.
 """
