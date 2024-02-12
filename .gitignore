@@ -6,3 +6,4 @@ lgtm.*
 import-runtime-repos/runtimes
 import-runtime-repos/polakdot-sdk
 import-runtime-repos/.crates-io-cache.txt
+*.env

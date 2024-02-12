@@ -22,7 +22,7 @@ decimals = chain.token_decimals or 10
 
 #hash = chain.get_chain_finalised_head()
 #header = chain.get_block_header(block_hash=hash)
-num = 19074056 #header['header']['number']
+num = 19095181 #header['header']['number']
 
 accs = 0
 hits = 0
