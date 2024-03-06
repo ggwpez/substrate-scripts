@@ -5,52 +5,23 @@ import os
 import sys
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
+import argparse
 
-num=int(sys.argv[1])
+decimals = 0
 
-chain = SubstrateInterface(
-	#url="ws://127.0.0.1:9944",
-	# Using the public endpoint can get you rate-limited.
-	#url="wss://rpc.polkadot.io",
-	url="wss://wss.api.moonbeam.network",
-	# Or use some external node:
-	#url="wss://rococo-try-runtime-node.parity-chains.parity.io:443"
-)
+def connect(url):
+	chain = SubstrateInterface(url)
 
-# open a file to write the results to
-f = open("ti-issues.txt", "a")
-
-print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
-decimals = 10
-print("Decimals", decimals)
-
-with open("sudo-blocks.json", "r") as f:
-	extrinsics = json.load(f)
-
-blocks = []
-for ext in extrinsics:
-	asdf = int(ext.split("-")[0])
-	blocks.append(asdf)
-
-blocks.sort()
+	print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
+	global decimals
+	decimals = 10
+	print("Decimals", decimals)
+	return chain
 
 def dot(v):
 	return f"{v/10**decimals:,} DOT"
 
-print(blocks)
-#if os.path.exists("blocks-ti.txt"):
-#	removed = 0
-#	with open("blocks-ti.txt", "r") as f:
-#		for line in f:
-#			data = json.loads(line)
-#			if not "diff" in data:
-#				blocks.remove(data["block"])
-#				removed += 1
-#	print(f"Removed {removed} blocks from the list")
-
-# query all accounts
-
-def check_block(block):
+def check_block(chain, block, expected_diff):
 	at = chain.get_block_hash(block)
 
 	ti = chain.query("Balances", "TotalIssuance", block_hash=at).value
@@ -71,34 +42,70 @@ def check_block(block):
 		c += 1
 	print(f"[{block}] Queried {c} accounts in total")
 
-	if sum != ti:
-		print(f"[{block}] TotalIssuance mismatch: {dot(sum)} vs {dot(ti)}")
-		print(f"[{block}] Exact values: {sum} vs {ti}")
+	if ti < sum:
+		print(f"[{block}] The TotalIssuance is smaller than the sum of all accounts TI. TI: {dot(ti)}, Sum: {dot(sum)}")
+		print(f"[{block}] TI must be increased by {ti} - {sum} = {ti - sum} {dot(ti - sum)}")
+	elif ti > sum:
+		print(f"[{block}] The TotalIssuance is larger than the sum of all accounts TI. TI: {dot(ti)}, Sum: {dot(sum)}")
+		print(f"[{block}] TI must be decreased by {sum} - {ti} = {sum - ti} {dot(sum - ti)}")
 	else:
-		print(f"[{block}] TotalIssuance matches: {dot(sum)}")
+		print(f"[{block}] The TotalIssuance is equal to the sum of all accounts TI. TI: {dot(ti)}")
+	
 	
 	with open("blocks-ti.txt", "a") as f:
 		obj = {
 			"block": block,
 			"sum": sum,
 			"ti": ti,
+			"runtime": chain.name,
 		}
 		if ti != sum:
 			obj["diff"] = ti - sum
 		f.write(json.dumps(obj) + "\n")
-	return ((ti - sum) == 0)
+	ret = ((ti - sum) == expected_diff)
+	if ret:
+		print(f"[{block}] The difference is as expected")
+	else:
+		print(f"[{block}] The difference is not as expected")
+	return ret
 
-check_block(num)
-sys._exit(0)
-
-def check_range(start, end):
+def check_range(chain, start, end, expected_diff):
 	if start == end:
 		return start
 	
 	mid = (start + end) // 2
-	if check_block(mid):
-		return check_range(start, mid)
+	if check_block(chain, mid, expected_diff):
+		return check_range(chain, start, mid, expected_diff)
 	else:
-		return check_range(mid+1, end)
+		return check_range(chain, mid+1, end, expected_diff)
 
-check_range(17051032, 19102065)
+#check_range(17051032, 19102065)
+
+def parse_args():
+	parser = argparse.ArgumentParser(description="Check TotalIssuance")
+	parser.add_argument("--url", type=str, default="wss://rpc.polkadot.io", help="URL of the node to connect to")
+	# Two sub-command options: block and bisect
+	subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+	# Block sub-command
+	block_parser = subparsers.add_parser("block", help="Check a specific block")
+	block_parser.add_argument("block", type=int, help="Block number to check")
+
+	# Bisect sub-command
+	bisect_parser = subparsers.add_parser("bisect", help="Bisect the range")
+	bisect_parser.add_argument("start", type=int, help="Start block number")
+	bisect_parser.add_argument("end", type=int, help="End block number")
+	bisect_parser.add_argument("--offset", type=int, help="Expected difference")
+
+	return parser.parse_args()
+
+if __name__ == "__main__":
+	args = parse_args()
+	chain = connect(args.url)
+
+	if args.subcommand == "block":
+		check_block(chain, args.block, 0)
+	elif args.subcommand == "bisect":
+		check_range(chain, args.start, args.end, args.offset)
+	else:
+		raise Exception("Unknown subcommand")
