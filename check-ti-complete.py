@@ -25,9 +25,10 @@ Subsequently, these offsets can be adjusted via https://github.com/paritytech/po
 import json
 import os
 import sys
+import argparse
+
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
-import argparse
 
 decimals = 0
 
