@@ -1,4 +1,26 @@
-# Find issues with the TotalIssuance
+'''
+Verifies the integrity of the `TotalIssuance` storage item in a FRAME runtime.
+
+The script can either check the TI at a specific block number, or bisect a range of block number to
+find the block number that invalidated the TI.
+
+Since the querying of all accounts is slow, the script writes all successfully queried blocks to a
+file `blocks-ti.txt`.
+
+# Usage
+
+Checking a single block looks like this:
+```
+python3 check-ti-complete.py --url wss://rpc.polkadot.io block 123456
+```
+
+Here we find the first block that had incorrect TI offset of 42:
+```
+python3 check-ti-complete.py --url wss://rpc.polkadot.io bisect 10000 20000 --offset 42
+```
+
+Subsequently, these offsets can be adjusted via https://github.com/paritytech/polkadot-sdk/pull/3001
+'''
 
 import json
 import os
@@ -51,7 +73,6 @@ def check_block(chain, block, expected_diff):
 	else:
 		print(f"[{block}] The TotalIssuance is equal to the sum of all accounts TI. TI: {dot(ti)}")
 	
-	
 	with open("blocks-ti.txt", "a") as f:
 		obj = {
 			"block": block,
@@ -78,8 +99,6 @@ def check_range(chain, start, end, expected_diff):
 		return check_range(chain, start, mid, expected_diff)
 	else:
 		return check_range(chain, mid+1, end, expected_diff)
-
-#check_range(17051032, 19102065)
 
 def parse_args():
 	parser = argparse.ArgumentParser(description="Check TotalIssuance")
