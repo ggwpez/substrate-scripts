@@ -1,4 +1,12 @@
 """
+
+---
+WARNING
+
+There was a bug recently discovered in MR 12951. Please hold off with this eager
+migration for now.
+---
+
 This script is used to upgrade accounts to the new balance storage scheme
 introduced in https://github.com/paritytech/substrate/pull/12951
 
