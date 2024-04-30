@@ -1,5 +1,7 @@
 '''
-Update the hashlocks of a carg `vendor` directory.
+Update the hashlocks of a cargo `vendor` directory.
+
+This is useful when modifying the code in a `vendor` dir, since cargo will otherwise refuse to build.
 
 Usage:
 	python rehash.py [--path /path/to/workspace]
