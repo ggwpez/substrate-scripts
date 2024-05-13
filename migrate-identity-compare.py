@@ -1,7 +1,8 @@
 """
 SPDX-License-Identifier: GPL-3.0-only
 
-Compare that the Kusama identity pallet's storage `IdentityOf` is the same as the Kusama Collective chain.
+Compare that the Kusama identity pallet's storage `IdentityOf` is the
+same as on the Kusama Collectives chain.
 """
 
 import json
