@@ -1,3 +1,14 @@
+"""
+SPDX-License-Identifier: GPL-3.0-only
+
+Find clock skew for chains. Needs manual adjustment per chain to
+know the expected time between blocks and how many queries to make.
+
+Install the dependency:
+	pip install substrate-interface
+Set the env variable `SENDER_URI` and run:
+	python3 migrate-identity.py
+"""
 import os
 import json
 import math
@@ -9,7 +20,7 @@ import matplotlib.pyplot as plt
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
 
-START = 20803735 # 2024-05-17 00:00:00
+START = 20803735 # Start block. Should be anchored on a common timestamp, like 2024-05-17 00:00:00
 QUERIES  = 3650 # How many times to query
 DIFF     = 1440 # How many blocks to skip in between each query
 EXPECTED = 6 * 1000 # Expected block time in ms
