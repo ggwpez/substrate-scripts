@@ -1,3 +1,8 @@
+# Polkadot Fellowship rank retention script Prints a PJS link to submit the extrinsic.
+#
+# Run with python3 fellowship-retain.py 148f8D1P4CP2tV8JuaVHzEXQQgj3jBxEg3k9qZydPzkJjbQG
+# And click the JS link of the console.
+
 import argparse
 import os
 
