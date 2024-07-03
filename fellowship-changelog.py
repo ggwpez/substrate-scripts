@@ -1,0 +1,97 @@
+import argparse
+import glob
+import yaml
+import sys
+import re
+import os
+
+# Open all the PrDoc YAML files in the respective sub-folders and aggregate the specified
+# audiences into a markdown file.
+parser = argparse.ArgumentParser(description='Generate a changelog from PrDoc YAML files')
+parser.add_argument('--root', help='The root directory to search for PrDoc YAML files in')
+parser.add_argument('--output', help='The output file to write the changelog to')
+parser.add_argument('--audiences', help='The audiences to include in the changelog')
+parser.add_argument('--versions', help='The versions to include in the changelog')
+parser.add_argument('--integration-mr-number', help='The integration merge request number')
+args = parser.parse_args()
+
+output_path = args.output
+relevant_audiences = args.audiences.split(',')
+versions = args.versions.split(',')
+mr_number = args.integration_mr_number
+root = args.root
+# Version -> changes
+output = []
+
+for version in versions:
+	path = f'{root}/{version}'
+	if not os.path.exists(f'{path}'):
+		print(f'Error: {path} does not exist')
+		sys.exit(1)
+	
+	for file in glob.glob(f'{path}/*.prdoc'):
+		file = open(file, 'r')
+		prdoc = yaml.safe_load(file)
+		title = prdoc["title"]
+		number = os.path.basename(file.name).split('_')[1].split('-')[0].split('.')[0]
+		relevant = False
+
+		for doc in prdoc["doc"]:
+			audiences = doc["audience"]
+
+			if audiences in relevant_audiences or set(audiences).intersection(relevant_audiences):
+				relevant = True
+				break
+
+		if relevant:
+			print(f'👀 [{number}] {title}')
+		else:
+			print(f'🥱 [{number}] {title}')
+			continue
+		
+		short_version = version.split('.0')[0]
+		title = title.rstrip('.').strip()
+		# Replace `[Something]` with `Something:`
+		title = re.sub(r'\[(.*?)\]', r'\1:', title)
+		# Words that contain `::` should be put in backticks
+		title = re.sub(r'(\w+::\w+)', r'`\1`', title)
+		# Replace pallet_ with pallet- while ignoring the case
+		title = re.sub(r'pallet_(\w+)', r'pallet-\1', title, flags=re.IGNORECASE)
+		title = title[0].upper() + title[1:]
+		line = f'- [[#{mr_number}](https://github.com/polkadot-fellows/runtimes/pull/{mr_number})] {title} ([SDK v{short_version} #{number}](https://github.com/paritytech/polkadot-sdk/pull/{number})).'
+		output.append(line)
+
+if len(output) == 0:
+	print('No changes found')
+	sys.exit(0)
+
+categories = {
+	'Changed': [], 'Fixed': [], 'Added': [], 'Removed': []
+}
+# Do some best-effort sorting
+for line in output:
+	if 'fix' in line.lower():
+		categories['Fixed'].append(line)
+	elif 'add' in line.lower() or 'introduce' in line.lower():
+		categories['Added'].append(line)
+	elif 'remove' in line.lower() or 'deprecate' in line.lower():
+		categories['Removed'].append(line)
+	else:
+		categories['Changed'].append(line)
+
+for cat in categories:
+	# Ignore non-alphanum chars when sorting:
+	categories[cat] = sorted(categories[cat], key=lambda x: re.sub(r'\W+', '', x.lower()))
+
+file = open(output_path, 'w')
+# Print the full invocation command as comment
+file.write(f'<!--\n')
+file.write(f'{" ".join(sys.argv)}\n')
+file.write(f'-->\n\n')
+
+for category in categories:
+	if len(categories[category]) > 0:
+		file.write(f'## {category}\n\n')
+		for line in categories[category]:
+			file.write(f'{line}\n')
+		file.write('\n')
