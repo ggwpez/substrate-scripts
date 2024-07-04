@@ -1,3 +1,14 @@
+# Generate a CHANGELOG entry when updating the Polkadot runtimes to a new SDK release.
+# Please specify a new file as `--output` since it will be overwritten.
+#
+# example:
+# 	python3 fellowship-changelog.py \
+# 		--root ../polkadot-sdk/prdoc \
+# 		--output ../runtimes/new_CHANGELOG.md \
+# 		--versions 1.8.0,1.9.0,1.10.0,1.11.0,1.12.0,1.13.0 \
+#		--audiences "Runtime User,Runtime Dev" \
+#		--integration-mr-number 322
+
 import argparse
 import glob
 import yaml
@@ -5,8 +16,6 @@ import sys
 import re
 import os
 
-# Open all the PrDoc YAML files in the respective sub-folders and aggregate the specified
-# audiences into a markdown file.
 parser = argparse.ArgumentParser(description='Generate a changelog from PrDoc YAML files')
 parser.add_argument('--root', help='The root directory to search for PrDoc YAML files in')
 parser.add_argument('--output', help='The output file to write the changelog to')
