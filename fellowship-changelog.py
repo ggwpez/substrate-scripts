@@ -49,6 +49,9 @@ for version in versions:
 			print(f'🥱 [{number}] {title}')
 			continue
 		
+		if 'westend' in title.lower() or 'rococo' in title.lower():
+			continue
+
 		short_version = version.split('.0')[0]
 		title = title.rstrip('.').strip()
 		# Replace `[Something]` with `Something:`
@@ -66,7 +69,7 @@ if len(output) == 0:
 	sys.exit(0)
 
 categories = {
-	'Changed': [], 'Fixed': [], 'Added': [], 'Removed': []
+	'Added': [], 'Changed': [], 'Fixed': [], 'Removed': []
 }
 # Do some best-effort sorting
 for line in output:
@@ -86,12 +89,13 @@ for cat in categories:
 file = open(output_path, 'w')
 # Print the full invocation command as comment
 file.write(f'<!--\n')
-file.write(f'{" ".join(sys.argv)}\n')
+file.write(f'\tGenerated with https://github.com/ggwpez/substrate-scripts/blob/3b74931cbcfc083544713422828eae7e2c1c378b/fellowship-changelog.py\n\n')
+file.write(f'\t{" ".join(sys.argv)}\n')
 file.write(f'-->\n\n')
 
-for category in categories:
+for category in ['Added', 'Changed', 'Fixed', 'Removed']:
 	if len(categories[category]) > 0:
-		file.write(f'## {category}\n\n')
+		file.write(f'### {category}\n\n')
 		for line in categories[category]:
 			file.write(f'{line}\n')
 		file.write('\n')
