@@ -1,6 +1,6 @@
 // `dot` is the name we gave to `npx papi add`
 import { collectives } from "@polkadot-api/descriptors";
-import { Binary, createClient } from "polkadot-api";
+import { createClient } from "polkadot-api";
 import { chainSpec as polkadotChainSpec } from "polkadot-api/chains/polkadot";
 import { chainSpec as collectivesChainSpec } from "polkadot-api/chains/polkadot_collectives";
 import { getSmProvider } from "polkadot-api/sm-provider";
@@ -64,7 +64,7 @@ console.log(`Refunding ${to_be_refunded.length} referenda`);
 
 for (const { referendum_id } of to_be_refunded) {
   console.log(`Refunding referendum ${referendum_id}`);
-  const tx = api.tx.FellowshipReferenda.refund_decision_deposit({index: referendum_id });
+  const tx = api.tx.FellowshipReferenda.refund_decision_deposit({ index: referendum_id });
   //const tx = api.tx.System.remark({remark: Binary.fromHex("0x00") });
 
   await tx.signAndSubmit(signer)
