@@ -64,7 +64,7 @@ console.log(`Refunding ${to_be_refunded.length} referenda`);
 
 for (const { referendum_id } of to_be_refunded) {
   console.log(`Refunding referendum ${referendum_id}`);
-  const tx = api.tx.FellowshipReferenda.refund_decision_deposit({ index: referendum_id });
+  const tx = api.tx.FellowshipReferenda.refund_decision_deposit({ index: 177 });
   //const tx = api.tx.System.remark({remark: Binary.fromHex("0x00") });
 
   await tx.signAndSubmit(signer)
