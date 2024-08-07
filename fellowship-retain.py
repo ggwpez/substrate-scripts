@@ -42,7 +42,7 @@ referenda_call = substrate.compose_call(
 	call_params={
 		'proposal_origin': { 'FellowshipOrigins': f'RetainAt{rank}Dan' },
 		'proposal': { 'Inline': f'{hex_encoded}' },
-		'enactment_moment': { 'At': 1 }
+		'enactment_moment': { 'After': 10 }
 	}
 )
 

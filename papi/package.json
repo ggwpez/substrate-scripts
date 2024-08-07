@@ -4,7 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "papi && node index.js"
+    "setup": "npm install && npx papi add collectives -n polkadot_collectives && papi",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
