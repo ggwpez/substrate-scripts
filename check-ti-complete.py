@@ -37,32 +37,44 @@ def connect(url):
 
 	print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
 	global decimals
-	decimals = 10
+	decimals = chain.token_decimals
+	global unit
+	unit = chain.token_symbol
 	print("Decimals", decimals)
 	return chain
 
 def dot(v):
-	return f"{v/10**decimals:,} DOT"
+	return f"{v/10**decimals:,} {unit}"
 
-def check_block(chain, block, expected_diff):
+def check_block(chain, block, expected_diff, trace=False):
 	at = chain.get_block_hash(block)
 
 	ti = chain.query("Balances", "TotalIssuance", block_hash=at).value
 	print(f"TI at {block}: {dot(ti)}")
 
+	all_accounts = {}
 	sum = 0
 	c = 0
 	accounts = chain.query_map("System", "Account", block_hash=at, page_size=1000)
 	for id, data in accounts:
+		id = id.value
 		data = data["data"]
 		free = data["free"].value
 		reserved = data["reserved"].value
 		total = free + reserved
 		sum += total
 
+		if trace:
+			all_accounts[id] = {
+				"free": free,
+				"reserved": reserved,
+				"total": total,
+			}
+
+		c += 1
 		if c % 1000 == 0:
 			print(f"[{block}] Processed {c} accounts")
-		c += 1
+
 	print(f"[{block}] Queried {c} accounts in total")
 
 	if ti < sum:
@@ -74,16 +86,19 @@ def check_block(chain, block, expected_diff):
 	else:
 		print(f"[{block}] The TotalIssuance is equal to the sum of all accounts TI. TI: {dot(ti)}")
 	
-	with open("blocks-ti.txt", "a") as f:
+	with open(f"all-accounts-{chain.chain}-{block}.txt", "a") as f:
+		f.write(json.dumps(all_accounts) + "\n")
+	with open("blocks-ti.json", "a") as f:
 		obj = {
 			"block": block,
 			"sum": sum,
 			"ti": ti,
-			"runtime": chain.name,
+			"runtime": chain.chain,
 		}
 		if ti != sum:
 			obj["diff"] = ti - sum
 		f.write(json.dumps(obj) + "\n")
+
 	ret = ((ti - sum) == expected_diff)
 	if ret:
 		print(f"[{block}] The difference is as expected")
@@ -110,6 +125,7 @@ def parse_args():
 	# Block sub-command
 	block_parser = subparsers.add_parser("block", help="Check a specific block")
 	block_parser.add_argument("block", type=int, help="Block number to check")
+	block_parser.add_argument("--trace", help="Store complete trace", action="store_true")
 
 	# Bisect sub-command
 	bisect_parser = subparsers.add_parser("bisect", help="Bisect the range")
@@ -124,7 +140,7 @@ if __name__ == "__main__":
 	chain = connect(args.url)
 
 	if args.subcommand == "block":
-		check_block(chain, args.block, 0)
+		check_block(chain, args.block, 0, args.trace)
 	elif args.subcommand == "bisect":
 		check_range(chain, args.start, args.end, args.offset)
 	else:
