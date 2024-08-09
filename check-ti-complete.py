@@ -11,7 +11,7 @@ file `blocks-ti.txt`.
 
 Checking a single block looks like this:
 ```
-python3 check-ti-complete.py --url wss://rpc.polkadot.io block 123456
+python3 check-ti-complete.py --url wss://rpc.polkadot.io block 123456 --trace
 ```
 
 Here we find the first block that had incorrect TI offset of 42:
