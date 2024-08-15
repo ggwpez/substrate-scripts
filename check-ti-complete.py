@@ -79,10 +79,10 @@ def check_block(chain, block, expected_diff, trace=False):
 
 	if ti < sum:
 		print(f"[{block}] The TotalIssuance is smaller than the sum of all accounts TI. TI: {dot(ti)}, Sum: {dot(sum)}")
-		print(f"[{block}] TI must be increased by {sum} - {ti} = {sum - ti} {dot(ti - sum)}")
+		print(f"[{block}] TI must be increased by {sum} - {ti} = {sum - ti} ({dot(sum - ti)})")
 	elif ti > sum:
 		print(f"[{block}] The TotalIssuance is larger than the sum of all accounts TI. TI: {dot(ti)}, Sum: {dot(sum)}")
-		print(f"[{block}] TI must be decreased by {ti} - {sum} = {ti - sum} {dot(sum - ti)}")
+		print(f"[{block}] TI must be decreased by {ti} - {sum} = {ti - sum} ({dot(ti - sum)})")
 	else:
 		print(f"[{block}] The TotalIssuance is equal to the sum of all accounts TI. TI: {dot(ti)}")
 	
