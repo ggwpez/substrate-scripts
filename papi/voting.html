@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .referendum { margin-bottom: 20px; }
+        .toggle-container { display: inline-block; }
+        .toggle-container input[type="radio"] { display: none; }
+        .toggle-container label {
+            display: inline-block;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        .toggle-container input[type="radio"]:checked + label.aye {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .toggle-container input[type="radio"]:checked + label.nay {
+            background-color: #F44336;
+            color: white;
+        }
+        #finish { display: block; margin-top: 20px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <h1>OpenGov Referenda Voting</h1>
+    <div id="referenda"></div>
+    <button id="finish">Finish Voting</button>
+    <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+    <script>
+        fetch('/referenda')
+            .then(response => response.json())
+            .then(referenda => {
+                const referendaDiv = document.getElementById('referenda');
+                referenda.forEach(refIndex => {
+                    const div = document.createElement('div');
+                    div.className = 'referendum';
+                    div.innerHTML = `
+                        <h3>Referendum <a href=https://polkadot.subsquare.io/referenda/${refIndex}>${refIndex}</a></h3>
+                        <div class="toggle-container">
+                            <input type="radio" id="aye-${refIndex}" name="vote-${refIndex}" value="Aye">
+                            <label for="aye-${refIndex}" class="aye">Kek</label>
+                            <input type="radio" id="nay-${refIndex}" name="vote-${refIndex}" value="Nay">
+                            <label for="nay-${refIndex}" class="nay">Cringe</label>
+                        </div>
+                    `;
+                    referendaDiv.appendChild(div);
+
+                    div.querySelectorAll('input[type="radio"]').forEach(radio => {
+                        radio.addEventListener('change', () => {
+                            vote(refIndex, radio.value);
+                        });
+                    });
+                });
+            });
+
+        function vote(refIndex, vote) {
+            fetch('/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refIndex, vote })
+            });
+        }
+
+        document.getElementById('finish').addEventListener('click', () => {
+            fetch('/finish')
+                .then(response => response.text())
+                .then(result => {
+                    console.log('Result:', result);
+                    document.getElementById('result').textContent = result;
+                });
+        });
+    </script>
+</body>
+</html>
