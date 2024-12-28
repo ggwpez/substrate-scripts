@@ -12,9 +12,14 @@
   "description": "",
   "dependencies": {
     "@polkadot-api/descriptors": "file:.papi/descriptors",
+    "@polkadot-labs/hdkd": "^0.0.10",
+    "@polkadot-labs/hdkd-helpers": "^0.0.10",
+    "@polkadot/api": "^15.0.2",
+    "@scure/bip39": "^1.5.0",
     "dialog": "^0.3.1",
-    "express": "^4.19.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "node-notifier": "^10.0.1",
-    "polkadot-api": "^1.1.0"
+    "polkadot-api": "^1.8.1"
   }
 }
