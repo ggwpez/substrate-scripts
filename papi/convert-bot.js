@@ -70,7 +70,6 @@ async function getExistentialDeposit(api) {
 }
 
 async function waitForBalanceUpdate(api, address, tokenId, initialBalance, timeout = 5 * 600000) {
-	return 0; // fuck it
 	const startTime = Date.now();
 	while (Date.now() - startTime < timeout) {
 		const current = await getTokenBalance(api, address, tokenId);
@@ -185,28 +184,14 @@ async function multiSwap(api, account, dotBalance) {
 		const swapAmount = BigInt(Math.floor(Number(dotBalance) * token.ratio));
 		if (swapAmount <= 0) continue;
 
-		const initBalance = await getTokenBalance(api, account.address, token.id);
 		console.log(`Swapping ${formatDOT(swapAmount)} to ${symbol}`);
 
-		const received_promise = waitForBalanceUpdate(
-			api,
-			account.address,
-			token.id,
-			initBalance
-		);
 		await swap(api, account, DOT_ON_HYDRA, token.id, swapAmount, token.omni);
-
-		var received = 0;
-		try {
-			received = await received_promise;
-		} catch (error) {
-			console.error(`Swap failed for ${symbol}:`, error);
-		}
 
 		results.push({
 			symbol,
 			amountIn: swapAmount,
-			amountOut: received
+			amountOut: 0n
 		});
 	}
 
