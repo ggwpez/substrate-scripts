@@ -59,7 +59,6 @@ async function getTokenBalance(api, address, tokenId) {
 	if (tokenId == 0) {
 		return { free: await getBalance(api, address) };
 	}
-
 	return api.query.tokens.accounts(address, tokenId);
 }
 
@@ -69,10 +68,11 @@ async function getExistentialDeposit(api) {
 	return ed;
 }
 
-async function waitForBalanceUpdate(api, address, tokenId, initialBalance, timeout = 5 * 600000) {
+async function waitForBalanceUpdate(api, address, tokenId, initialBalance, timeout = 60_000) {
 	const startTime = Date.now();
 	while (Date.now() - startTime < timeout) {
 		const current = await getTokenBalance(api, address, tokenId);
+		console.log(`Current balance, initial: ${formatDOT(current.free)}, ${formatDOT(initialBalance.free)}`);
 		if (current.free > initialBalance.free) {
 			return current.free - initialBalance.free;
 		}
@@ -108,7 +108,7 @@ async function teleport(api, account, amount) {
 		.signAndSend(account);
 }
 
-function construct_swap(api, account, assetIn, assetOut, amount, omni) {
+function construct_swap(api, assetIn, assetOut, amount, omni) {
 	if (omni) {
 		return api.tx.omnipool.sell(assetIn, assetOut, amount, 1)
 	} else if (assetOut == USDT_ON_HYDRA) {
@@ -144,49 +144,18 @@ function construct_swap(api, account, assetIn, assetOut, amount, omni) {
 	}
 }
 
-async function swap(api, account, assetIn, assetOut, amount, omni) {
-	var promise = new Promise((resolve, _reject) => {
-		construct_swap(api, account, assetIn, assetOut, amount, omni)
-			.signAndSend(account, ({ status, events }) => {
-				if (status.isFinalized) {
-					events
-						// find/filter for failed events
-						.filter(({ event }) =>
-							api.events.system.ExtrinsicFailed.is(event)
-						)
-						// we know that data for system.ExtrinsicFailed is
-						// (DispatchError, DispatchInfo)
-						.forEach(({ event: { data: [error, info] } }) => {
-							if (error.isModule) {
-								// for module errors, we have the section indexed, lookup
-								const decoded = api.registry.findMetaError(error.asModule);
-								const { docs, method, section } = decoded;
-
-								console.error(`Swap error: ${section}.${method}: ${docs.join(' ')}`);
-							} else {
-								// Other, CannotLookup, BadOrigin, no extra info
-								console.error('Swap error:', error.toString());
-							}
-						});
-
-					resolve();
-				}
-			});
-	});
-
-	return await promise;
-}
-
-async function multiSwap(api, account, dotBalance) {
+async function batchSwap(api, account, dotBalance) {
+	const swapCalls = [];
 	const results = [];
 
 	for (const [symbol, token] of Object.entries(TOKENS)) {
 		const swapAmount = BigInt(Math.floor(Number(dotBalance) * token.ratio));
 		if (swapAmount <= 0) continue;
 
-		console.log(`Swapping ${formatDOT(swapAmount)} to ${symbol}`);
+		console.log(`Adding swap of ${formatDOT(swapAmount)} to ${symbol} to batch`);
 
-		await swap(api, account, DOT_ON_HYDRA, token.id, swapAmount, token.omni);
+		const swapCall = construct_swap(api, DOT_ON_HYDRA, token.id, swapAmount, token.omni);
+		swapCalls.push(swapCall);
 
 		results.push({
 			symbol,
@@ -195,7 +164,31 @@ async function multiSwap(api, account, dotBalance) {
 		});
 	}
 
-	return results;
+	// Create the batch transaction
+	const batchTx = api.tx.utility.forceBatch(swapCalls);
+
+	// Sign and send the batch
+	return new Promise((resolve, reject) => {
+		batchTx.signAndSend(account, ({ status, events }) => {
+			if (status.isFinalized) {
+				events
+					.filter(({ event }) =>
+						api.events.system.ExtrinsicFailed.is(event)
+					)
+					.forEach(({ event: { data: [error, info] } }) => {
+						if (error.isModule) {
+							const decoded = api.registry.findMetaError(error.asModule);
+							const { docs, method, section } = decoded;
+							console.error(`Batch swap error: ${section}.${method}: ${docs.join(' ')}`);
+						} else {
+							console.error('Batch swap error:', error.toString());
+						}
+					});
+
+				resolve(results);
+			}
+		}).catch(reject);
+	});
 }
 
 async function setupConnections() {
@@ -232,9 +225,9 @@ async function handleDotTeleport(polkadotApi, hydraApi, account, balance, ed) {
 	try {
 		received = await received_promise;
 	} catch (error) {
-		console.error(`Swap failed for ${symbol}:`, error);
+		console.error('Teleport error:', error);
 	}
-	
+
 	console.log(`Teleported ${formatDOT(received)}`);
 	return received;
 }
@@ -259,11 +252,11 @@ async function main() {
 			return;
 		}
 
-		console.log(`Swapping ${formatDOT(dotBalance.free)} to multiple tokens`);
-		const swapResults = await multiSwap(hydraApi, account, dotBalance.free);
+		console.log(`Batching swaps for ${formatDOT(dotBalance.free)} to multiple tokens`);
+		const swapResults = await batchSwap(hydraApi, account, dotBalance.free);
 
 		for (const result of swapResults) {
-			console.log(`Swapped ${formatDOT(result.amountIn)} for ${formatUSDT(result.amountOut)} ${result.symbol}`);
+			console.log(`Included swap of ${formatDOT(result.amountIn)} to ${result.symbol} in batch`);
 		}
 	} catch (error) {
 		console.error('Error:', error);
