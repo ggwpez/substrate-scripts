@@ -20,22 +20,22 @@ import matplotlib.pyplot as plt
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
 
-START = 20803735 # Start block. Should be anchored on a common timestamp, like 2024-05-17 00:00:00
-QUERIES  = 3650 # How many times to query
-DIFF     = 1440 # How many blocks to skip in between each query
+START = 24807576 # Start block. Should be anchored on a common timestamp, like 2025-02-20 00:00:00
+QUERIES  = 3650 # How many times to query. One relay year.
+DIFF     = 1440 # How many blocks to skip in between each query. Set to one relay day.
 EXPECTED = 6 * 1000 # Expected block time in ms
-
-data = []
-PATH = "block-time-polkadot.json"
-
-if os.path.exists(PATH):
-	with open(PATH, 'r') as f:
-		data = json.load(f)
 
 chain = SubstrateInterface(
 	url="wss://rpc.polkadot.io",
 )
 print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
+
+data = []
+PATH = f"block-time-{chain.name}.json"
+
+if os.path.exists(PATH):
+	with open(PATH, 'r') as f:
+		data = json.load(f)
 
 for i in range(QUERIES+1):
 	block_number = START - i * DIFF
@@ -61,8 +61,6 @@ with open(PATH, 'w') as f:
 
 # Sort by block number
 data = sorted(data, key=lambda x: x[0])
-# only take take last QUERIES (in case that we have cached)
-#data = data[-(QUERIES + 1):]
 
 expected_y = [data[0][1] + EXPECTED * DIFF * i for i in range(len(data))]
 
