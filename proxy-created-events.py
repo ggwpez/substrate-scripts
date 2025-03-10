@@ -83,6 +83,6 @@ for event in events:
 		if param["name"] != "proxy_type":
 			continue
 
-		if param["value"] != "Any":
+		if param["value"] != "Any" and param["value"] != "NonTransfer":
 			print(f'Found bad proxy of type: {param["value"]}, account: {event["params"][0]["value"]}')
 			break
