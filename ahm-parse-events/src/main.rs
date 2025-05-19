@@ -29,11 +29,11 @@ const SECOND_MIGRATION_START: u32 = 11736080;
 const SECOND_MIGRATION_FINISH: [u8; 32] = hex!("904e2af8b15fffb67df42a4bc86037a8e7304d3e3e53aaa1cd9ff262acd02588");
 
 /// Serializable version of `RuntimeEvent`
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BadEvent {
     Unreserved {
+        amount: u128, // Balance first so we sort by it
         who: AccountId32,
-        amount: u128,
     },
 }
 
@@ -99,6 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Write the bad events to a JSON file
+    bad_events.sort();
     let file = File::create("bad-events.json").expect("Must create file");
     let writer = BufWriter::new(file);
     serde_json::to_writer_pretty(writer, &bad_events).expect("Must write events to file");
