@@ -12,6 +12,7 @@ use serde::{Serialize, Deserialize};
 use std::fs::File;
 use std::io::BufWriter;
 use subxt::config::substrate::AccountId32;
+use subxt::events::EventDetails;
 
 #[subxt::subxt(
     runtime_metadata_path = "westmint_metadata.scale",
@@ -52,45 +53,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Iterate backwards until we hit our first block
     while block.number() >= SECOND_MIGRATION_START {       
         let events = api.events().at(block.hash()).await?;
+        let events = relevant_events(events.iter());
 
-        let mut events = events.iter();
-        // We only care about the events between `BatchReceived` and `BatchProcessed`.
+        for raw_event in events {
+            let event = raw_event.as_root_event::<westmint::Event>().expect("Must parse event");
 
-        let mut batch_received = false;
-
-        while let Some(event) = events.next() {
-            let event = event.expect("Must parse events");
-            
-            // First, find the `BatchReceived` event.
-            match event.as_root_event::<westmint::Event>().expect("Must parse event") {
-                RuntimeEvent::AhMigrator(AhMigratorEvent::BatchReceived { .. }) => {
-                    log::info!("Batch received");
-                    batch_received = true;                    
-                    break;
+            match event {
+                RuntimeEvent::Balances(BalancesEvent::Unreserved { who, amount }) if amount > 0 => {
+                    log::info!("Unreserved {} amount {:?}", who, amount);
+                    bad_events.push(BadEvent::Unreserved { who, amount });
                 },
-                _ => (),
-            }
-        }
-
-        // Now keep all events until we hit the `BatchProcessed` event.
-        if batch_received {
-            while let Some(event) = events.next() {
-                let event = event.expect("Must parse events");
-
-                match event.as_root_event::<westmint::Event>().expect("Must parse event") {
-                    RuntimeEvent::AhMigrator(AhMigratorEvent::BatchProcessed { .. }) => {
-                        log::info!("Batch processed");
-                        break;
-                    },
-                    RuntimeEvent::Balances(BalancesEvent::Unreserved { who, amount }) if amount > 0 => {
-                        log::info!("Unreserved {:?} amount {:?}", who, amount);
-                        bad_events.push(BadEvent::Unreserved { who, amount });
-                    },
-                    _ => (),
+                _ => {
+                    log::info!("[{}] Other event: {}::{}", block.number(), raw_event.pallet_name(), raw_event.variant_name());
                 }
             }
-        } else {
-            log::debug!("No batch received in block {}", block.number());
         }
         
         // goto parent block
@@ -106,6 +82,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+/// Return all events that are between a pair of `BatchReceived` and `BatchProcessed` events.
+fn relevant_events<Events>(mut events: Events) -> Vec<subxt::events::EventDetails<PolkadotConfig>>
+where
+    Events: Iterator<Item = Result<EventDetails<PolkadotConfig>, subxt::Error>>,
+{
+    let mut relevant_events = Vec::new();
+    let mut relevant = false;
+
+    while let Some(event) = events.next() {
+        let raw_event = event.expect("Must parse event");
+        let event = raw_event.as_root_event::<westmint::Event>().expect("Must parse event");
+
+        match event {
+            RuntimeEvent::AhMigrator(AhMigratorEvent::BatchReceived { pallet, .. }) => {
+                log::info!("BatchReceived: {:?}", pallet);
+                relevant = true;
+            },
+            RuntimeEvent::AhMigrator(AhMigratorEvent::BatchProcessed { .. }) => {
+                relevant = false;
+            },
+            _ if relevant => {
+                relevant_events.push(raw_event);
+            },
+            _ => (),
+        }
+    }
+
+    relevant_events
+}
+
 
 mod custom_types {
     use codec::{Decode, Encode};
