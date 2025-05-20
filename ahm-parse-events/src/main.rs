@@ -60,8 +60,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match event {
                 RuntimeEvent::Balances(BalancesEvent::Unreserved { who, amount }) if amount > 0 => {
-                    log::info!("Unreserved {} amount {:?}", who, amount);
-                    bad_events.push(BadEvent::Unreserved { who, amount });
+                    log::debug!("Unreserved {} amount {:?}", who, amount);
+                    bad_events.push((block.number(), block.hash(),BadEvent::Unreserved { who, amount }));
+                },
+                RuntimeEvent::Balances(BalancesEvent::Unreserved { who, amount }) if amount == 0 => {
+                    log::trace!("Zero unreserve for account {:?}", who);
                 },
                 _ => {
                     log::info!("[{}] Other event: {}::{}", block.number(), raw_event.pallet_name(), raw_event.variant_name());
@@ -97,7 +100,7 @@ where
 
         match event {
             RuntimeEvent::AhMigrator(AhMigratorEvent::BatchReceived { pallet, .. }) => {
-                log::info!("BatchReceived: {:?}", pallet);
+                log::debug!("BatchReceived: {:?}", pallet);
                 relevant = true;
             },
             RuntimeEvent::AhMigrator(AhMigratorEvent::BatchProcessed { .. }) => {
