@@ -41,6 +41,9 @@ for version in versions:
 	for file in glob.glob(f'{path}/*.prdoc'):
 		file = open(file, 'r')
 		prdoc = yaml.safe_load(file)
+		if not prdoc:
+			print(f'Error: {file.name} is empty')
+			continue
 		title = prdoc["title"]
 		number = os.path.basename(file.name).split('_')[1].split('-')[0].split('.')[0]
 		relevant = False
@@ -70,7 +73,7 @@ for version in versions:
 		# Replace pallet_ with pallet- while ignoring the case
 		title = re.sub(r'pallet_(\w+)', r'pallet-\1', title, flags=re.IGNORECASE)
 		title = title[0].upper() + title[1:]
-		line = f'- [[#{mr_number}](https://github.com/polkadot-fellows/runtimes/pull/{mr_number})] {title} ([SDK v{short_version} #{number}](https://github.com/paritytech/polkadot-sdk/pull/{number})).'
+		line = f'- [[#{mr_number}](https://github.com/polkadot-fellows/runtimes/pull/{mr_number})] {title} ([SDK {short_version} #{number}](https://github.com/paritytech/polkadot-sdk/pull/{number})).'
 		output.append(line)
 
 if len(output) == 0:
