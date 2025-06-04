@@ -5,9 +5,9 @@
 # 	python3 fellowship-changelog.py \
 # 		--root ../polkadot-sdk/prdoc \
 # 		--output ../runtimes/new_CHANGELOG.md \
-# 		--versions 1.8.0,1.9.0,1.10.0,1.11.0,1.12.0,1.13.0 \
+# 		--versions stable2503,stable2503-1,stable2503-2 \
 #		--audiences "Runtime User,Runtime Dev" \
-#		--integration-mr-number 322
+#		--integration-mr-number 711
 
 import argparse
 import glob
