@@ -6,7 +6,7 @@ It removes the `version =` and puts a `path =` in their place for all SDK depend
 Usage:
 
 ```
-python diener.py --sdk <path-to-polkadot-sdk> --runtimes <path-to-runtimes>
+python diener-git.py --sdk <path-to-polkadot-sdk> --sdk-git <git-url> --sdk-branch <branch> --runtimes <path-to-runtimes>
 ```
 """
 
