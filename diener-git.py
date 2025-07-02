@@ -50,7 +50,7 @@ def main(sdk_path: str, sdk_git: str, sdk_branch: str, runtimes_path: str):
 		# Write command that we used to generate the Cargo.toml
 		f.write(f"# AUTO-GENERATED FILE. DO NOT EDIT.\n")
 		f.write(f"# Check backup Cargo.toml.bak for the original file.\n")
-		f.write(f"# Script at https://github.com/ggwpez/substrate-scripts/blob/master/diener-git.py\n")
+		f.write(f"# Script at https://github.com/ggwpez/substrate-scripts/blob/master/diener-git.py \n")
 		f.write(f"# > python3 diener-git.py --sdk {sdk_path} --sdk-git {sdk_git} --sdk-branch {sdk_branch} --runtimes {runtimes_path}\n\n\n")
 		toml.dump(raw_runtimes, f)
 
