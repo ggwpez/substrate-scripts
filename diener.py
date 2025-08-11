@@ -6,14 +6,18 @@ It removes the `version =` and puts a `path =` in their place for all SDK depend
 Usage:
 
 ```
-python diener.py --sdk <path-to-polkadot-sdk> --runtimes <path-to-runtimes>
+python3 diener.py --sdk <path-to-polkadot-sdk> --runtimes <path-to-runtimes>
 ```
+
+Deps:
+
+- pip install toml cargo-workspace
 """
 
 import argparse
 import os
 import toml
-
+import shutil
 from cargo_workspace import Workspace, DependencyLocation
 
 def main(sdk_path: str, runtimes_path: str):
@@ -38,6 +42,10 @@ def main(sdk_path: str, runtimes_path: str):
 		if crate is None:
 			print(f"Runtime {renamed} not found in SDK")
 			continue
+		# Check that if the name exists in both, do nothing
+		if runtimes.crates.find_by_name(renamed) is not None:
+			print(f"Name clash: {dep.name} in runtime and SDK. Ignoring")
+			continue
 
 		# Remove the Cargo.toml from the path
 		path = os.path.relpath(crate.abs_path, runtimes_path)
@@ -50,12 +58,17 @@ def main(sdk_path: str, runtimes_path: str):
 
 		runtime_deps[dep.name]["path"] = path
 		runtime_deps[dep.name]["version"] = None
+		runtime_deps[dep.name]["git"] = None
+		runtime_deps[dep.name]["branch"] = None
 
 		# Modify the Cargo.toml of the SDK crate and set the expected version
 		crate_toml = toml.load(open(crate.abs_path))
 		crate_toml["package"]["version"] = dep.version
 		with open(crate.abs_path, "w") as f:
 			toml.dump(crate_toml, f)
+
+	# Backup original Cargo.toml
+	shutil.copy(os.path.join(runtimes_path, "Cargo.toml"), os.path.join(runtimes_path, "Cargo.toml.bak"))
 
 	# Write the modified Cargo.toml
 	with open(os.path.join(runtimes_path, "Cargo.toml"), "w") as f:
