@@ -7,11 +7,11 @@ chain = SubstrateInterface(
 
 print(f"Connected to {chain.name}: {chain.chain} v{chain.version}")
 
-# Fetch block hash for 
+# End block of AHM
 header = chain.get_block_header("0x6a2993bf952925f445158e9018f59d347bf35c5018851d6d713d860847cc433c")['header']
 number = header['number']
 
-# Read the DMP queue (1111) of each block and go up to parent for 1000 blocks
+# Read DMP queue of Asset Hub for the last 1000 blocks
 for i in range(1000):
 	block_hash = chain.get_block_hash(number)
 
