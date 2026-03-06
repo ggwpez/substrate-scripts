@@ -2,6 +2,7 @@
 Script to replace all Polkadot-SDK crates with a local folder path.
 
 It removes the `version =` and puts a `path =` in their place for all SDK dependencies.
+It also modifies the SDK folder, so please create a commit in both SDK and runtimes before use.
 
 Usage:
 
